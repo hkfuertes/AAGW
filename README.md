@@ -8,7 +8,7 @@ Three apps:
     - Wifi is present && car Bluetooth is connected
     - Wifi network is known and stored in preferences (not connected to manually)
 - **Starter** App, present on the gateway, and exposing an intent action to be executed from other app. This app will launch on Bluetooth connection attempt, and will approve the incoming bluetooth connection, and send over bluetooth the Request API Wifi info, so that Android Auto can automatically start.
-- Again see: https://github.com/nisargjhaveri/AAWirelessGateway
-- Auto approve bluetooth connection?
-  - https://www.londatiga.net/it/programming/android/how-to-programmatically-pair-or-unpair-android-bluetooth-device/
-  - https://stackoverflow.com/questions/35519321/android-bluetooth-pairing-without-user-enter-pin-and-confirmation-using-android
+  - Again see: https://github.com/nisargjhaveri/AAWirelessGateway
+  - Auto approve bluetooth connection?
+    - https://www.londatiga.net/it/programming/android/how-to-programmatically-pair-or-unpair-android-bluetooth-device/
+    - https://stackoverflow.com/questions/35519321/android-bluetooth-pairing-without-user-enter-pin-and-confirmation-using-android
