@@ -6,7 +6,8 @@ Complete solution for using an old phone (Fire Stick TV) as a Android Auto Wirel
 This is the main GW App. It will be in server mode.
 - Take https://github.com/nisargjhaveri/AAWirelessGateway as base.
 - Enable HotSpot on Boot
-  -  Configure it via `adb shell cmd -w wifi <command>`
+  -  Configure it via `adb shell cmd -w wifi <command>` and Start it?
+    - https://ch1p.io/lineageos-run-shell-script-at-boot-as-root/
     - https://xdaforums.com/t/enable-init-d.4351731/
   -  Auto enable it on boot via `BroadcastReceiver`
     - https://stackoverflow.com/questions/5290141/android-broadcastreceiver-on-startup-keep-running-when-activity-is-in-backgrou
