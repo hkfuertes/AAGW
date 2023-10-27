@@ -1,0 +1,28 @@
+[2023-10-18 14:47:21.919483] Waiting for device
+[2023-10-18 14:47:29.284331] Found port = /dev/ttyACM0
+[2023-10-18 14:47:29.322352] Handshake
+[2023-10-18 14:47:29.342316] Preloader ready, sending FACTORYM
+[2023-10-18 14:50:00.826712] Waiting for device
+[2023-10-18 14:50:06.676637] Found port = /dev/ttyACM0
+[2023-10-18 14:50:06.714947] Handshake
+[2023-10-18 14:50:06.734776] Preloader ready, sending FACTORYM
+[2023-10-18 14:54:39.820196] Waiting for device
+[2023-10-18 14:54:46.936363] Found port = /dev/ttyACM0
+[2023-10-18 14:54:46.974564] Handshake
+[2023-10-18 14:54:46.994618] Preloader ready, sending FACTORYM
+[2023-10-23 23:39:01.170590] Waiting for device
+[2023-10-23 23:39:07.765545] Found port = /dev/ttyACM0
+[2023-10-23 23:39:07.804270] Handshake
+[2023-10-23 23:39:07.824278] Preloader ready, sending FACTORYM
+[2023-10-28 00:01:27.357403] Waiting for device
+[2023-10-28 00:01:34.208965] Found port = /dev/ttyACM0
+[2023-10-28 00:01:34.247344] Handshake
+[2023-10-28 00:01:34.267258] Preloader ready, sending FACTORYM
+[2023-10-28 00:15:25.289323] Waiting for device
+[2023-10-28 00:15:32.157670] Found port = /dev/ttyACM0
+[2023-10-28 00:15:32.195986] Handshake
+[2023-10-28 00:15:32.216018] Preloader ready, sending FACTORYM
+[2023-10-28 00:33:28.507501] Waiting for device
+[2023-10-28 00:33:35.101549] Found port = /dev/ttyACM0
+[2023-10-28 00:33:35.139699] Handshake
+[2023-10-28 00:33:35.159667] Preloader ready, sending FACTORYM
