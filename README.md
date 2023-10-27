@@ -18,17 +18,23 @@ This is the main GW App. It will be in server mode.
 - [ ] `BroadcastReceiver` with a notification.
 - [ ] `BroadcastReceiver` brings up AP
 ---
-
-- **Launcher** App, for the client phone. This app will make use of the `Request API Wifi` protocol, to connect to the hotspot (without routing the traffic through it), and will launch android auto pointing to the Wifi GW
-  - Automation can be created if:
-    - Wifi is present && car Bluetooth is connected
-    - Wifi network is known and stored in preferences (not connected to manually)
+### Launcher App
+This app will be on client phone and will make use of the `Request API Wifi` protocol, to connect to the hotspot (without routing the traffic through it), and will launch android auto pointing to the Wifi's GW.
+- https://developer.android.com/develop/connectivity/wifi/wifi-bootstrap#java
+- Wifi Credentials have to be in `SharedPreferences`
+- QuickTile?
+- Automation can be created if:
+  - Credentials are present
+  - Wifi is accesible/visible
+  - Car Bluetooth is connected
    
-    - #### Steps
+#### Steps
 - [ ] Android Preference Activity, with minimal framework (Basic `PreferenceActivity`)
 - [ ] `SharedPreference` to store Wifi 'credentials'
 - [ ] Request API WIFI connection and `AALaunch`
+  - https://github.com/borconi/WifiLauncherforHUR/blob/master/app/src/main/java/com/borconi/emil/wifilauncherforhur/connectivity/Connector.java
 - [ ] QuickTile Service
+---
 - **Starter** App, present on the gateway, and exposing an intent action to be executed from other app. This app will launch on Bluetooth connection attempt, and will approve the incoming bluetooth connection, and send over bluetooth the Request API Wifi info, so that Android Auto can automatically start.
   - Again see: https://github.com/nisargjhaveri/AAWirelessGateway
   - Auto approve bluetooth connection?
