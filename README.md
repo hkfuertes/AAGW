@@ -21,10 +21,8 @@ This is the main GW App. It will be in server mode.
        - https://android.googlesource.com/platform/packages/modules/Wifi/+/refs/heads/android13-release/service/java/com/android/server/wifi/WifiShellCommand.java
 
 #### Steps
-- [ ] Clean and minimize base app (nisargjhaveri/AAWirelessGateway)
+- [X] Clean and minimize base app (nisargjhaveri/AAWirelessGateway)
   - At this stage, the app has to work with WifiLauncher in Server mode (Client connects to GW' Wifi)
-- [ ] Button to enable hotspot
-- [ ] `BroadcastReceiver` with a notification.
 - [ ] `BroadcastReceiver` brings up AP
 ---
 ### Launcher App
