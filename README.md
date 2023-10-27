@@ -35,8 +35,19 @@ This app will be on client phone and will make use of the `Request API Wifi` pro
   - https://github.com/borconi/WifiLauncherforHUR/blob/master/app/src/main/java/com/borconi/emil/wifilauncherforhur/connectivity/Connector.java
 - [ ] QuickTile Service
 ---
-- **Starter** App, present on the gateway, and exposing an intent action to be executed from other app. This app will launch on Bluetooth connection attempt, and will approve the incoming bluetooth connection, and send over bluetooth the Request API Wifi info, so that Android Auto can automatically start.
-  - Again see: https://github.com/nisargjhaveri/AAWirelessGateway
-  - Auto approve bluetooth connection?
-    - https://www.londatiga.net/it/programming/android/how-to-programmatically-pair-or-unpair-android-bluetooth-device/
-    - https://stackoverflow.com/questions/35519321/android-bluetooth-pairing-without-user-enter-pin-and-confirmation-using-android
+### Starter App
+This app will live in GW. Via pair request or via intent will start the Bluetooth Native flow to launch AA on client.
+- Take https://github.com/nisargjhaveri/AAWirelessGateway as base.
+- Store in `SharedPreferences` last connected device (to wifi via Request Api)
+- System App?
+- Auto approve pairing
+  - https://www.londatiga.net/it/programming/android/how-to-programmatically-pair-or-unpair-android-bluetooth-device/
+  - https://stackoverflow.com/questions/35519321/android-bluetooth-pairing-without-user-enter-pin-and-confirmation-using-android
+
+#### Steps
+- [ ] Clean and minimize base app (nisargjhaveri/AAWirelessGateway)
+- [ ] Launch Flow on already paired device
+  - [ ] Save `WifiRequestInfo` recipient's bt address in `SharedPreferences`
+- [ ] `BroadcastReceiver` To auto accept pairing.
+- [ ] Initiate flow when pairing.
+- [ ] Expose intent/action to initiate flow on last stored bt address
