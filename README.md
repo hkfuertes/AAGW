@@ -7,6 +7,7 @@ This is the main GW App. It will be in server mode.
 - Take https://github.com/nisargjhaveri/AAWirelessGateway as base.
 - Enable HotSpot on Boot
   -  Configure it via `adb shell cmd -w wifi <command>`
+    - https://xdaforums.com/t/enable-init-d.4351731/
   -  Auto enable it on boot via `BroadcastReceiver`
     - https://stackoverflow.com/questions/5290141/android-broadcastreceiver-on-startup-keep-running-when-activity-is-in-backgrou
     - https://github.com/borconi/WifiLauncherforHUR/tree/master/app/src/main/java/com/borconi/emil/wifilauncherforhur/tethering
