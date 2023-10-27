@@ -11,11 +11,14 @@ This is the main GW App. It will be in server mode.
   -  Configure it via `adb shell cmd -w wifi <command>` and Start it?
      - https://ch1p.io/lineageos-run-shell-script-at-boot-as-root/
      - https://xdaforums.com/t/enable-init-d.4351731/
+     - https://android.googlesource.com/platform/packages/modules/Wifi/+/refs/heads/android13-release/service/java/com/android/server/wifi/WifiShellCommand.java
   -  Auto enable it on boot via `BroadcastReceiver`
      - https://stackoverflow.com/questions/5290141/android-broadcastreceiver-on-startup-keep-running-when-activity-is-in-backgrou
      - https://github.com/borconi/WifiLauncherforHUR/tree/master/app/src/main/java/com/borconi/emil/wifilauncherforhur/tethering
      - https://source.android.com/docs/core/connect/wifi-softap
      - https://stackoverflow.com/questions/6394599/android-turn-on-off-wifi-hotspot-programmatically
+     - Privileged?
+       - https://android.googlesource.com/platform/packages/modules/Wifi/+/refs/heads/android13-release/service/java/com/android/server/wifi/WifiShellCommand.java
 
 #### Steps
 - [ ] Clean and minimize base app (nisargjhaveri/AAWirelessGateway)
