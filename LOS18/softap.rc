@@ -1,4 +1,5 @@
 #/etc/init/softap.rc
+# Permissions on this file: 644, chown 0.0
 
 # define service, use executable here if script not needed
 service softap /system/bin/softap_start.sh

@@ -1,4 +1,7 @@
 #!/bin/sh
 # Permissions on this file: 755, chown 0.0
 
-sh -c "cmd -w wifi start-softap AAWG wpa2 1234567890 bridge"
+export SSID=AAWG
+export PASS_KEY=12334567890
+
+cmd -w wifi start-softap $SSID wpa2 $PASS_KEY bridge
