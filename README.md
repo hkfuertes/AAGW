@@ -1,6 +1,8 @@
 ## Android Auto Wirelesss Gateway
 Complete solution for using an old phone (Fire Stick TV) as a Android Auto Wireless Dongle.
 
+App Systemizer: https://github.com/xeddmc/terminal_systemizer/tree/master (can be used with su, no need for Magisk?)
+
 ---
 ### Main App
 This is the main GW App. It will be in server mode.
