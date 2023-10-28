@@ -6,4 +6,4 @@ service softap /system/bin/softap_start.sh
 
 # start the service when boot is completed
 on property:sys.boot_completed=1
-    start custom
+    start softap
