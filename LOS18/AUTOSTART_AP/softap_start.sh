@@ -1,6 +1,6 @@
 #!/bin/sh
-# Permissions on this file: 755, chown 0.0
 
+# Permissions on this file: 755, chown 0.0
 SSID=AAWG
 PASS_KEY=1234567890
 
