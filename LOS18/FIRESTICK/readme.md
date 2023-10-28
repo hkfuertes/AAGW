@@ -21,12 +21,16 @@ adb shell settings put global device_provisioned 1
 adb install Gateway.apk
 
 # Convert from TWRP
+adb push Gateway.apk /sdcard
+adb push privapp-permissions-net.mfuertes.aagw.gateway.xml /sdcard
+
+adb shell
 twrp mount /system
-adb shell mkdir -p /system/priv-app/net.mfuertes.aagw.gateway/
-adb shell chmod 0755 /system/priv-app/net.mfuertes.aagw.gateway/
-adb push Gateway.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
-adb shell chmod 0644 /system/priv-app/net.mfuertes.aagw.gateway/base.apk
-adb push privapp-permissions-net.mfuertes.aagw.gateway.xml /system/etc/permissions/
+mkdir -p /system/priv-app/net.mfuertes.aagw.gateway/
+chmod 0755 /system/priv-app/net.mfuertes.aagw.gateway
+cp /sdcard/Gateway.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
+chmod 0644 /system/priv-app/net.mfuertes.aagw.gateway/base.apk
+cp /sdcard/privapp-permissions-net.mfuertes.aagw.gateway.xml /system/etc/permissions/
 ```
 
 > **Download LOS18**: https://github.com/mt8695/android_device_amazon_sheldon/releases <br/> 
