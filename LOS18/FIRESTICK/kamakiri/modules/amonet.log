@@ -26,3 +26,10 @@
 [2023-10-28 00:33:35.101549] Found port = /dev/ttyACM0
 [2023-10-28 00:33:35.139699] Handshake
 [2023-10-28 00:33:35.159667] Preloader ready, sending FACTORYM
+[2023-10-28 12:47:17.481627] Waiting for device
+[2023-10-28 12:48:01.799364] Waiting for device
+[2023-10-28 14:09:20.385473] Waiting for device
+[2023-10-28 14:09:34.362840] Waiting for device
+[2023-10-28 14:09:40.313705] Found port = /dev/ttyACM0
+[2023-10-28 14:09:40.349957] Handshake
+[2023-10-28 14:09:40.369939] Preloader ready, sending FACTORYM
