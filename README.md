@@ -1,14 +1,12 @@
 ## Android Auto Wirelesss Gateway
 Complete solution for using an old phone (Fire Stick TV) as a Android Auto Wireless Dongle.
 
-App Systemizer: https://github.com/xeddmc/terminal_systemizer/tree/master (can be used with su, no need for Magisk?)
-
 ---
 ### Main App
 This is the main GW App. It will be in server mode.
 - Take https://github.com/nisargjhaveri/AAWirelessGateway as base.
 - Enable HotSpot on Boot
-  -  See `LOS18` folder for init scripts on Phone Rom (it does not work on TV roms...)
+  -  See `LOS18` folder for init scripts on Phone rom (it does not work on TV roms...)
 
 #### Steps
 - [X] Clean and minimize base app (nisargjhaveri/AAWirelessGateway)
