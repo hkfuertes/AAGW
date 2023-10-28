@@ -8,22 +8,10 @@ App Systemizer: https://github.com/xeddmc/terminal_systemizer/tree/master (can b
 This is the main GW App. It will be in server mode.
 - Take https://github.com/nisargjhaveri/AAWirelessGateway as base.
 - Enable HotSpot on Boot
-  -  Configure it via `adb shell cmd -w wifi <command>` and Start it?
-     - https://ch1p.io/lineageos-run-shell-script-at-boot-as-root/
-     - https://xdaforums.com/t/enable-init-d.4351731/
-     - https://android.googlesource.com/platform/packages/modules/Wifi/+/refs/heads/android13-release/service/java/com/android/server/wifi/WifiShellCommand.java
-  -  Auto enable it on boot via `BroadcastReceiver`
-     - https://stackoverflow.com/questions/5290141/android-broadcastreceiver-on-startup-keep-running-when-activity-is-in-backgrou
-     - https://github.com/borconi/WifiLauncherforHUR/tree/master/app/src/main/java/com/borconi/emil/wifilauncherforhur/tethering
-     - https://source.android.com/docs/core/connect/wifi-softap
-     - https://stackoverflow.com/questions/6394599/android-turn-on-off-wifi-hotspot-programmatically
-     - Privileged?
-       - https://android.googlesource.com/platform/packages/modules/Wifi/+/refs/heads/android13-release/service/java/com/android/server/wifi/WifiShellCommand.java
+  -  See `LOS18` folder for init scripts on Phone Rom (it does not work on TV roms...)
 
 #### Steps
 - [X] Clean and minimize base app (nisargjhaveri/AAWirelessGateway)
-  - At this stage, the app has to work with WifiLauncher in Server mode (Client connects to GW' Wifi)
-- [ ] `BroadcastReceiver` brings up AP
 ---
 ### Launcher App
 This app will be on client phone and will make use of the `Request API Wifi` protocol, to connect to the hotspot (without routing the traffic through it), and will launch android auto pointing to the Wifi's GW.
@@ -53,6 +41,7 @@ This app will live in GW. Via pair request or via intent will start the Bluetoot
 
 #### Steps
 - [ ] Clean and minimize base app (nisargjhaveri/AAWirelessGateway)
+- [ ] LocalOnlyHotspot on RFCOMM connection!
 - [ ] Launch Flow on already paired device
   - [ ] Save `WifiRequestInfo` recipient's bt address in `SharedPreferences`
 - [ ] `BroadcastReceiver` To auto accept pairing.
