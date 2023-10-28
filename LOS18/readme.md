@@ -1,4 +1,4 @@
-## FireStick Lite (sheldon/p) installation guide
+## LOS18 headless installation guide
 ```shell
 # From TWRP!
 # Ennable insecure ADB
