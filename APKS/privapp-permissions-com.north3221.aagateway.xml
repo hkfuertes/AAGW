@@ -2,12 +2,17 @@
 <!-- Install in /system/etc/permissions/ | chmod 0644 -->
 <!-- aapt d permissions $apkdir -->
 <permissions>
-    <privapp-permissions package="net.mfuertes.aagw.gateway">
+    <privapp-permissions package="com.north3221.aagateway">
         <permission name='android.permission.FOREGROUND_SERVICE'/>
         <permission name='android.permission.INTERNET'/>
         <permission name='android.permission.MANAGE_USB'/>
         <permission name='android.permission.RECEIVE_BOOT_COMPLETED'/>
         <permission name="android.permission.ACCESS_WIFI_STATE" />
         <permission name="android.permission.ACCESS_NETWORK_STATE" />
+
+        <permission name="android.permission.WAKE_LOCK"/>
+        <permission name="android.permission.CHANGE_WIFI_STATE" />
+        <permission name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        <permission name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     </privapp-permissions>
 </permissions>

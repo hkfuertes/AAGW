@@ -4,7 +4,9 @@ import android.app.Activity
 import android.content.Intent
 import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbManager
+import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.util.Log
 
 class USBReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {

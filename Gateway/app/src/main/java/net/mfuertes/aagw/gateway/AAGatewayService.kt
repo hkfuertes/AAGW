@@ -7,6 +7,7 @@ import android.app.Service
 import android.content.Intent
 import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbManager
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -14,6 +15,7 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import java.io.*
 import java.net.*
+import kotlin.concurrent.thread
 
 
 class AAGatewayService : Service() {
@@ -24,7 +26,7 @@ class AAGatewayService : Service() {
         private const val NOTIFICATION_ID = 1
 
         private const val DEFAULT_HANDSHAKE_TIMEOUT = 15
-        private const val DEFAULT_CONNECTION_TIMEOUT = 60
+        private const val DEFAULT_CONNECTION_TIMEOUT = 60 // 1min
     }
 
     private var mLogCommunication = false
@@ -42,8 +44,6 @@ class AAGatewayService : Service() {
     private var mUsbComplete = false
     private var mLocalComplete = false
 
-    private var mUsbFallback = false
-    private var mClientHandshakeTimeout = DEFAULT_HANDSHAKE_TIMEOUT
     private var mClientConnectionTimeout = DEFAULT_CONNECTION_TIMEOUT
 
     private val mMainHandlerThread = MainHandlerThread()
@@ -55,7 +55,11 @@ class AAGatewayService : Service() {
 
         val notificationManager = getSystemService(NotificationManager::class.java)
 
-        val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, "General", NotificationManager.IMPORTANCE_DEFAULT)
+        val notificationChannel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            "General",
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
         notificationChannel.setSound(null, null)
         notificationChannel.enableVibration(false)
         notificationChannel.enableLights(false)
@@ -100,29 +104,13 @@ class AAGatewayService : Service() {
         return START_REDELIVER_INTENT
     }
 
-    private fun onInitialHandshake(success: Boolean, rejectReason: Int) {
-        if (success && rejectReason == 0) {
-            updateNotification("Initial Handshake done")
-        }
-        else {
-            if (!mLocalComplete) {
-                stopRunning("Handshake failed or rejected")
-            }
-            else {
-                Log.i(LOG_TAG, "Handshake failed or rejected, but tcp is already connected. Ignoring.")
-            }
-
-            if (success) {
-                Log.i(LOG_TAG, "Connection was rejected with reason $rejectReason")
-            }
-        }
-    }
-
     private fun onMainHandlerThreadStopped() {
         stopService()
     }
 
     private fun stopService() {
+        // We retry by re-enabling MTP
+        thread { MtpReceiver.toggleUSB() }
         stopForeground(true)
         stopSelf()
     }
@@ -149,16 +137,13 @@ class AAGatewayService : Service() {
         stopRunning("Service onDestroy")
     }
 
-    private inner class MainHandlerThread: Thread() {
+    private inner class MainHandlerThread : Thread() {
         private val mUsbThread = USBPollThread()
-        private val mTcpThread = TCPPollThread()
-
-        private val mTcpControlThread = TCPControlThread()
+        private val mTcpThread = TCPPollThread(server = false)
 
         fun cancel() {
             mUsbThread.cancel()
             mTcpThread.cancel()
-            mTcpControlThread.cancel()
         }
 
         override fun run() {
@@ -176,7 +161,7 @@ class AAGatewayService : Service() {
         }
     }
 
-    private inner class USBPollThread: Thread() {
+    private inner class USBPollThread : Thread() {
         var mUsbFileDescriptor: ParcelFileDescriptor? = null
 
         fun cancel() {
@@ -225,22 +210,22 @@ class AAGatewayService : Service() {
                         val len: Int
                         try {
                             len = phoneInputStream.read(buffer)
-                            if (mLogCommunication) Log.v(LOG_TAG, "USB read: ${buffer.copyOf(len).toHex()}")
-                        }
-                        catch (e: Exception) {
+                            if (mLogCommunication) Log.v(
+                                LOG_TAG,
+                                "USB read: ${buffer.copyOf(len).toHex()}"
+                            )
+                        } catch (e: Exception) {
                             Log.e(LOG_TAG, "usb main loop - usb read error: ${e.message}")
                             throw e
                         }
 
                         try {
                             mSocketOutputStream?.write(buffer.copyOf(len))
-                        }
-                        catch (e: Exception) {
+                        } catch (e: Exception) {
                             Log.e(LOG_TAG, "usb main loop - tcp write error: ${e.message}")
                             throw e
                         }
-                    }
-                    catch (e: Exception) {
+                    } catch (e: Exception) {
                         stopRunning("Error in USB main loop")
                     }
                 }
@@ -259,7 +244,10 @@ class AAGatewayService : Service() {
 
     }
 
-    private inner class TCPPollThread: Thread() {
+    private inner class TCPPollThread(server: Boolean) : Thread() {
+
+        val serverMode = server
+
         var mServerSocket: ServerSocket? = null
         var mSocket: Socket? = null
 
@@ -279,21 +267,35 @@ class AAGatewayService : Service() {
             super.run()
 
             try {
-                mServerSocket = ServerSocket(5288, 5).apply {
-                    soTimeout = mClientConnectionTimeout * 1000
-                    reuseAddress = true
-                }
+                if (serverMode) {
+                    mServerSocket = ServerSocket(5288, 5).apply {
+                        soTimeout = mClientConnectionTimeout * 1000
+                        reuseAddress = true
+                    }
 
-                mServerSocket?.let {
-                    mSocket = it.accept().apply {
-                        soTimeout = 10000
+                    mServerSocket?.let {
+                        mSocket = it.accept().apply {
+                            soTimeout = 10000
+                        }
+                    }
+
+                    mServerSocket?.runCatching {
+                        close()
+                    }
+                    mServerSocket = null
+                } else {
+                    val addressInt = getSystemService(WifiManager::class.java).dhcpInfo.gateway
+                    val address = "%d.%d.%d.%d".format(null,
+                        addressInt and 0xff,
+                        addressInt shr 8 and 0xff,
+                        addressInt shr 16 and 0xff,
+                        addressInt shr 24 and 0xff)
+
+                    Log.d(LOG_TAG, address)
+                    mSocket = Socket().apply {
+                        connect(InetSocketAddress(address, 5277), mClientConnectionTimeout * 1000)
                     }
                 }
-
-                mServerSocket?.runCatching {
-                    close()
-                }
-                mServerSocket = null
 
                 mSocket?.also {
                     mSocketOutputStream = it.getOutputStream()
@@ -301,11 +303,9 @@ class AAGatewayService : Service() {
                 }
 
                 Log.i(LOG_TAG, "TCP connected")
-            }
-            catch (e: SocketTimeoutException) {
-                stopRunning("Wireless client did not connect")
-            }
-            catch (e: IOException) {
+            } catch (e: SocketTimeoutException) {
+                stopRunning("Wireless connection did not happen")
+            } catch (e: IOException) {
                 Log.e(LOG_TAG, "tcp - error initializing: ${e.message}")
                 stopRunning("Error initializing TCP")
             }
@@ -347,21 +347,23 @@ class AAGatewayService : Service() {
                             mSocketInputStream?.readFully(buffer, 4, 4)
                         }
 
-                        encLen = ((buffer[2].toInt() and 0xFF) shl 8) or (buffer[3].toInt() and 0xFF)
+                        encLen =
+                            ((buffer[2].toInt() and 0xFF) shl 8) or (buffer[3].toInt() and 0xFF)
 
                         mSocketInputStream?.readFully(buffer, pos, encLen)
 
-                        if (mLogCommunication) Log.v(LOG_TAG, "TCP read: ${buffer.copyOf(encLen + pos).toHex()}")
-                    }
-                    catch (e: Exception) {
+                        if (mLogCommunication) Log.v(
+                            LOG_TAG,
+                            "TCP read: ${buffer.copyOf(encLen + pos).toHex()}"
+                        )
+                    } catch (e: Exception) {
                         Log.e(LOG_TAG, "tcp main loop - tcp read error: ${e.message}")
                         throw e
                     }
 
                     try {
                         mPhoneOutputStream?.write(buffer.copyOf(encLen + pos))
-                    }
-                    catch (e: Exception) {
+                    } catch (e: Exception) {
                         Log.e(LOG_TAG, "tcp main loop - usb write error: ${e.message}")
                         throw e
                     }
@@ -382,57 +384,6 @@ class AAGatewayService : Service() {
         }
     }
 
-    private inner class TCPControlThread: Thread() {
-        var mServerSocket: ServerSocket? = null
-
-        fun cancel() {
-            mServerSocket?.runCatching {
-                close()
-            }
-            mServerSocket = null
-        }
-
-        override fun run() {
-            super.run()
-
-            var success = false
-            var readValue = -1
-
-            try {
-                mServerSocket = ServerSocket(5287, 5).apply {
-                    soTimeout = mClientHandshakeTimeout * 1000
-                    reuseAddress = true
-                }
-
-                mServerSocket?.let {
-                    it.accept().apply {
-                        soTimeout = 10000
-
-                        success = true
-                        readValue = getInputStream().read()
-
-                        close()
-                    }
-                }
-
-                mServerSocket?.runCatching {
-                    close()
-                }
-                mServerSocket = null
-            }
-            catch (e: SocketTimeoutException) {
-                Log.e(LOG_TAG, "Initial handshake did not happen in time")
-            }
-            catch (e: IOException) {
-                Log.e(LOG_TAG, "tcp handshake - error initializing: ${e.message}")
-            }
-
-            Handler(mainLooper).post {
-                onInitialHandshake(success, readValue)
-            }
-        }
-    }
-
     private val hexArray = "0123456789ABCDEF".toCharArray()
     fun ByteArray.toHex(): String {
         val hexChars = CharArray(size * 2)
@@ -442,7 +393,7 @@ class AAGatewayService : Service() {
         forEach {
             val octet = it.toInt()
             hexChars[i] = hexArray[(octet and 0xF0).ushr(4)]
-            hexChars[i+1] = hexArray[(octet and 0x0F)]
+            hexChars[i + 1] = hexArray[(octet and 0x0F)]
             i += 2
         }
 
