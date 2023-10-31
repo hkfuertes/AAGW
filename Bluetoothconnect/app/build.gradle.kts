@@ -13,8 +13,6 @@ android {
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -33,5 +31,6 @@ android {
 }
 
 dependencies {
-
+    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:4.3")
+    implementation("com.linkedin.dexmaker:dexmaker:2.28.1")
 }

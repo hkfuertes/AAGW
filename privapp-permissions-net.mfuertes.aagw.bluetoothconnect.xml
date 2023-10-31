@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Install in /system/etc/permissions/ | chmod 0644 -->
+<!-- aapt d permissions $apkdir -->
+<permissions>
+    <privapp-permissions package="net.mfuertes.aagw.bluetoothconnect">
+        <permission name='android.permission.BLUETOOTH'/>
+        <permission name='android.permission.BLUETOOTH_PRIVILEGED'/>
+        <permission name='android.permission.BLUETOOTH_ADMIN'/>
+        <permission name='android.permission.BLUETOOTH_ADVERTISE'/>
+        <permission name='android.permission.BLUETOOTH_CONNECT'/>
+        <permission name='android.permission.RECEIVE_BOOT_COMPLETED'/>
+
+        <permission name='android.permission.INTERNET'/>
+        <permission name='android.permission.ACCESS_NETWORK_STATE'/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION" />
+        <permission name="android.permission.ACCESS_COARSE_LOCATION" />
+        <permission name="android.permission.NEARBY_WIFI_DEVICES" />
+    </privapp-permissions>
+</permissions>
+
