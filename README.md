@@ -3,11 +3,13 @@ Complete solution for using an old phone (Fire Stick TV) as a Android Auto Wirel
 
 - **Gateway** app in `client mode`, needs:
   - App needs to be in `/system/priv-app` if auto connection (headless, omit first time aproval in gui) and UsbDevice gadget mode reset is wanted.
-    - Provided the priv-app permissions.
-  - Set some wifi (Master's hostpot) if headless (TV dongle) set wifi via adb:
-    ```shell
-    adb shell cmd -w add-network ssid wpa2 psk
-    ```
+    - `priv-app` permissions file is provided.
+  - Set some wifi (Master's hostpot)
+    - if headless (TV dongle) set wifi via adb:
+    
+      ```shell
+      adb shell cmd -w add-network ssid wpa2 psk
+      ```
   - HeadUnit server running on Master
   - Master's hostpot running
 - **Gatway** app in `server mode`:
