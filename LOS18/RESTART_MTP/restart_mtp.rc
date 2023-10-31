@@ -1,9 +1,0 @@
-#/etc/init/softap.rc
-
-# Permissions on this file: 644, chown 0.0
-service restartmtp /system/bin/restart_mtp.sh
-    seclabel u:r:su:s0
-
-# start the service when boot is completed
-on property:sys.boot_completed=1
-    start restartmtp

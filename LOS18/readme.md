@@ -7,12 +7,7 @@ adb shell twrp remountrw /system
 # Maybe they where not there in the first place, add them!
 adb shell "echo 'ro.secure=0 ' >> /system/build.prop"
 adb shell "echo 'ro.adb.secure=0 ' >> /system/build.prop"
-adb shell "echo 'persist.sys.usb.config=mtp,adb ' >> /system/build.prop"
-
-# Data related changes
-adb shell twrp mount data
-adb shell "mkdir -p /data/property"
-adb shell "echo -n 'mtp,adb' > /data/property/persist.sys.usb.config"
+adb shell "echo 'persist.sys.usb.config=adb ' >> /system/build.prop"
 
 # Reboot into system
 adb reboot
@@ -20,9 +15,7 @@ adb reboot
 # Skip setup wizard
 adb shell settings put secure user_setup_complete 1
 adb shell settings put global device_provisioned 1
-
-# Install APP fom System
-adb install Gateway.apk
+adb shell cmd -w wifi add-network <SSID> wpa2 <PSK>
 
 # Reboot into TWRP
 adb reboot recovery
