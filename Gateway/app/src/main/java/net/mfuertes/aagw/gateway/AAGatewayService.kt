@@ -300,8 +300,10 @@ class AAGatewayService : Service() {
                         )
                         sleep(100)
                         Log.d(LOG_TAG, address)
-                    } while (address == "0.0.0.0")
+                    } while (address == "0.0.0.0" && isRunning())
 
+                    // If we got an interrupt (is not running) we end the thread...
+                    if(!isRunning()) return;
 
                     Log.d(LOG_TAG, address)
                     mSocket = Socket().apply {
