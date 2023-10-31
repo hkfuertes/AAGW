@@ -15,7 +15,6 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import java.io.*
 import java.net.*
-import kotlin.concurrent.thread
 
 
 class AAGatewayService : Service() {
@@ -109,8 +108,7 @@ class AAGatewayService : Service() {
     }
 
     private fun stopService() {
-        // We retry by re-enabling MTP
-        thread { MtpReceiver.toggleUSB() }
+        UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
         stopForeground(true)
         stopSelf()
     }
@@ -190,6 +188,10 @@ class AAGatewayService : Service() {
                     val fd = it.fileDescriptor
                     mPhoneInputStream = FileInputStream(fd)
                     mPhoneOutputStream = FileOutputStream(fd)
+
+                    // Fake HandShake?
+                    // mPhoneInputStream!!.read(ByteArray(16384))
+                    // mPhoneOutputStream!!.write(byteArrayOf(0, 3, 0, 8, 0, 2, 0, 1, 0, 4, 0, 0))
                 }
 
                 if (mUsbFileDescriptor == null || mPhoneInputStream == null || mPhoneOutputStream == null) {
@@ -284,12 +286,22 @@ class AAGatewayService : Service() {
                     }
                     mServerSocket = null
                 } else {
-                    val addressInt = getSystemService(WifiManager::class.java).dhcpInfo.gateway
-                    val address = "%d.%d.%d.%d".format(null,
-                        addressInt and 0xff,
-                        addressInt shr 8 and 0xff,
-                        addressInt shr 16 and 0xff,
-                        addressInt shr 24 and 0xff)
+                    var addressInt: Int
+                    var address: String
+
+                    do {
+                        addressInt = getSystemService(WifiManager::class.java).dhcpInfo.gateway
+                        address = "%d.%d.%d.%d".format(
+                            null,
+                            addressInt and 0xff,
+                            addressInt shr 8 and 0xff,
+                            addressInt shr 16 and 0xff,
+                            addressInt shr 24 and 0xff
+                        )
+                        sleep(100)
+                        Log.d(LOG_TAG, address)
+                    } while (address == "0.0.0.0")
+
 
                     Log.d(LOG_TAG, address)
                     mSocket = Socket().apply {
@@ -300,6 +312,11 @@ class AAGatewayService : Service() {
                 mSocket?.also {
                     mSocketOutputStream = it.getOutputStream()
                     mSocketInputStream = DataInputStream(it.getInputStream())
+
+                    //Fake Handshake?
+                    // mSocketOutputStream!!.write(byteArrayOf(0, 3, 0, 6, 0, 1, 0, 1, 0, 2))
+                    // mSocketOutputStream!!.flush()
+                    // mSocketInputStream!!.read(ByteArray(12))
                 }
 
                 Log.i(LOG_TAG, "TCP connected")

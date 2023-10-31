@@ -2,16 +2,12 @@
 ```shell
 # From TWRP!
 # Ennable insecure ADB
-twrp mount /system
-adb shell "sed -i 's|ro.secure=1|ro.secure=0|g' /system/build.prop"
-adb shell "sed -i 's|ro.adb.secure=1|ro.adb.secure=0|g' /system/build.prop"
-adb shell "echo 'persist.sys.usb.config=mtp,adb ' >> /system/build.prop"
-
+adb shell twrp mount /system
 adb shell twrp remountrw /system
 # Maybe they where not there in the first place, add them!
 adb shell "echo 'ro.secure=0 ' >> /system/build.prop"
 adb shell "echo 'ro.adb.secure=0 ' >> /system/build.prop"
-adb shell "echo 'persist.sys.usb.config=adb ' >> /system/build.prop"
+adb shell "echo 'persist.sys.usb.config=mtp,adb ' >> /system/build.prop"
 
 # Data related changes
 adb shell twrp mount data
@@ -40,6 +36,8 @@ adb shell twrp remountrw /system
 adb shell mkdir -p /system/priv-app/net.mfuertes.aagw.gateway/
 adb shell chmod 0755 /system/priv-app/net.mfuertes.aagw.gateway
 adb shell cp /data/app/**/*net.mfuertes.aagw.gateway*/base.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
+adb shell cp /sdcard/Gateway.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
+
 adb shell chmod 0644 /system/priv-app/net.mfuertes.aagw.gateway/base.apk
 adb shell cp /sdcard/privapp-permissions-net.mfuertes.aagw.gateway.xml /system/etc/permissions/
 
