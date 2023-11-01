@@ -1,4 +1,4 @@
-package net.mfuertes.aagw.gateway
+package net.mfuertes.aagw.gateway.connectivity
 
 import android.hardware.usb.UsbManager
 import android.os.Build

@@ -3,11 +3,24 @@
 <!-- aapt d permissions $apkdir -->
 <permissions>
     <privapp-permissions package="net.mfuertes.aagw.gateway">
-        <permission name='android.permission.FOREGROUND_SERVICE'/>
-        <permission name='android.permission.INTERNET'/>
-        <permission name='android.permission.MANAGE_USB'/>
-        <permission name='android.permission.RECEIVE_BOOT_COMPLETED'/>
-        <permission name="android.permission.ACCESS_WIFI_STATE" />
-        <permission name="android.permission.ACCESS_NETWORK_STATE" />
+        <permissionname="android.permission.MANAGE_USB"/>
+        <permissionname="android.permission.FOREGROUND_SERVICE" />
+
+        <permissionname="android.permission.BLUETOOTH" />
+        <permissionname="android.permission.BLUETOOTH_PRIVILEGED"/>
+        <permissionname="android.permission.BLUETOOTH_ADMIN" />
+        <permissionname="android.permission.BLUETOOTH_ADVERTISE" />
+        <permissionname="android.permission.BLUETOOTH_CONNECT" />
+        <permissionname="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+        <!-- HotSpot -->
+        <permissionname="android.permission.INTERNET" />
+        <permissionname="android.permission.ACCESS_NETWORK_STATE" />
+        <permissionname="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permissionname="android.permission.ACCESS_FINE_LOCATION" />
+        <permissionname="android.permission.NEARBY_WIFI_DEVICES"/>
+        <permissionname="android.permission.CHANGE_WIFI_STATE"/>
     </privapp-permissions>
 </permissions>
+
+

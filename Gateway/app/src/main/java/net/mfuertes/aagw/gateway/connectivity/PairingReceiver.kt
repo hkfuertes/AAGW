@@ -1,4 +1,4 @@
-package net.mfuertes.aagw.bluetoothconnect
+package net.mfuertes.aagw.gateway.connectivity
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter

@@ -1,9 +1,30 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.protobuf' version '0.9.4'
+}
+
+def keystoreProperties = new Properties()
+
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.canRead()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
 android {
+    if (project.android.hasProperty("namespace")) {
+        namespace("net.mfuertes.aagw.gateway")
+    }
+
+    signingConfigs {
+        config {
+            storeFile keystoreProperties["storeFile"] ? file(keystoreProperties["storeFile"]) : null
+            storePassword keystoreProperties["storePassword"]
+            keyAlias keystoreProperties["keyAlias"]
+            keyPassword keystoreProperties["keyPassword"]
+        }
+    }
+
     compileSdk 32
 
     defaultConfig {
@@ -11,10 +32,7 @@ android {
         minSdk 26
         targetSdk 31
         versionCode findProperty("versionCode") ? (findProperty("versionCode") as int) : 1
-        versionName findProperty("versionName") ?: "1.0.0"
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
+        versionName findProperty("versionName") ?: "1.0.0"}
 
     buildTypes {
         debug {
@@ -33,9 +51,24 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    namespace 'net.mfuertes.aagw.gateway'
 }
 
 dependencies {
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
+    implementation 'com.google.protobuf:protobuf-javalite:3.8.0'
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.8.0'
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option "lite"
+                }
+            }
+        }
+    }
 }

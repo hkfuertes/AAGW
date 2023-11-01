@@ -4,9 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbManager
-import android.net.wifi.WifiManager
 import android.os.Bundle
-import android.util.Log
 
 class USBReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +17,7 @@ class USBReceiverActivity : Activity() {
         if (intent.action?.equals(UsbManager.ACTION_USB_ACCESSORY_ATTACHED) == true) {
             val accessory = intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY) as UsbAccessory?
             accessory?.also { usbAccessory ->
-                val i = Intent(this, AAGatewayService::class.java)
+                val i = Intent(this, GatewayService::class.java)
                 i.putExtra(UsbManager.EXTRA_ACCESSORY, usbAccessory)
                 this.startForegroundService(i)
             }

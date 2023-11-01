@@ -1,9 +1,12 @@
 package net.mfuertes.aagw.gateway
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbManager
@@ -13,11 +16,13 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import net.mfuertes.aagw.gateway.connectivity.WifiHelper
+import net.mfuertes.aagw.gateway.connectivity.bluetooth.BluetoothProfileHandler
 import java.io.*
 import java.net.*
 
 
-class AAGatewayService : Service() {
+class GatewayService : Service() {
     companion object {
         private const val LOG_TAG = "AAService"
 
@@ -28,6 +33,7 @@ class AAGatewayService : Service() {
         private const val DEFAULT_CONNECTION_TIMEOUT = 60 // 1min
     }
 
+    private var mReservation: WifiManager.LocalOnlyHotspotReservation? = null
     private var mLogCommunication = false
 
     private var mRunning = false
@@ -48,6 +54,7 @@ class AAGatewayService : Service() {
     private val mMainHandlerThread = MainHandlerThread()
 
     private val mUsbManager: UsbManager by lazy { getSystemService(UsbManager::class.java) }
+    private val mBluetoothProfileHandler: BluetoothProfileHandler by lazy { BluetoothProfileHandler(this) }
 
     override fun onCreate() {
         super.onCreate()
@@ -79,6 +86,7 @@ class AAGatewayService : Service() {
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
+    @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
@@ -93,12 +101,48 @@ class AAGatewayService : Service() {
             return START_REDELIVER_INTENT
         }
 
-        //Manually start AA.
-        mRunning = true
-        mUsbComplete = false
-        mLocalComplete = false
+        val wifiHotspotInfo = WifiHelper.WifiHotspotInfo(
+            "MIWIFI_2G_kSds_EXT",
+            "Zk45RnvF",
+            "00:0C:43:E1:76:20",
+            ipAddress = WifiHelper.getIPAddress(true)!!
+        )
 
-        mMainHandlerThread.start()
+
+//        WifiHelper.startAp(this){success, reservation, ipAddress ->
+//            Log.d("AP", success.toString())
+//            Log.d("AP", reservation.toString())
+//            if(!success) return@startAp
+//
+//            mReservation = reservation
+//
+//            wifiHotspotInfo = WifiHelper.WifiHotspotInfo(
+//                reservation!!.softApConfiguration.ssid!!,
+//                reservation!!.softApConfiguration.passphrase!!,
+//                ipAddress = WifiHelper.getIPAddress(true)!!
+//            )
+//            Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
+
+            //BLUETOOTH_CONNECT permission
+            val pairedDevices: Set<BluetoothDevice> = BluetoothAdapter.getDefaultAdapter().getBondedDevices()
+
+            for(device in pairedDevices){
+                //Start Native Flow
+                mBluetoothProfileHandler.connectDevice(device, DEFAULT_HANDSHAKE_TIMEOUT * 1000L, wifiHotspotInfo!!){
+                    Log.d("NATIVE_FLOW", "Bluetooth: $it")
+                }
+            }
+
+            //NSD discovery!
+            //WifiHelper.registerService(this, 5288)
+
+            //Manually start AA.
+            mRunning = true
+            mUsbComplete = false
+            mLocalComplete = false
+
+            mMainHandlerThread.start()
+//        }
 
         return START_REDELIVER_INTENT
     }
@@ -108,7 +152,8 @@ class AAGatewayService : Service() {
     }
 
     private fun stopService() {
-        UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
+        WifiHelper.unRegisterService(this)
+        // UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
         stopForeground(true)
         stopSelf()
     }
@@ -137,7 +182,7 @@ class AAGatewayService : Service() {
 
     private inner class MainHandlerThread : Thread() {
         private val mUsbThread = USBPollThread()
-        private val mTcpThread = TCPPollThread(server = false)
+        private val mTcpThread = TCPPollThread()
 
         fun cancel() {
             mUsbThread.cancel()
@@ -246,7 +291,7 @@ class AAGatewayService : Service() {
 
     }
 
-    private inner class TCPPollThread(server: Boolean) : Thread() {
+    private inner class TCPPollThread(server: Boolean = true) : Thread() {
 
         val serverMode = server
 
@@ -269,7 +314,7 @@ class AAGatewayService : Service() {
             super.run()
 
             try {
-                if (serverMode) {
+                if(serverMode){
                     mServerSocket = ServerSocket(5288, 5).apply {
                         soTimeout = mClientConnectionTimeout * 1000
                         reuseAddress = true
@@ -285,7 +330,7 @@ class AAGatewayService : Service() {
                         close()
                     }
                     mServerSocket = null
-                } else {
+                }else{
                     var addressInt: Int
                     var address: String
 
