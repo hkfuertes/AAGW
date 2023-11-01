@@ -30,7 +30,10 @@ adb shell mkdir -p /system/priv-app/net.mfuertes.aagw.gateway/
 adb shell chmod 0755 /system/priv-app/net.mfuertes.aagw.gateway
 adb shell cp /data/app/**/*net.mfuertes.aagw.gateway*/base.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
 adb shell cp /sdcard/Gateway.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
+adb shell chmod 0644 /system/priv-app/net.mfuertes.aagw.gateway/base.apk
 adb shell cp /sdcard/privapp-permissions-net.mfuertes.aagw.gateway.xml /system/etc/permissions/
+adb shell chmod 0644 /system/etc/permissions/privapp-permissions-net.mfuertes.aagw.gateway.xml
+
 
 
 # Auto start AP
