@@ -20,7 +20,7 @@ adb shell cmd -w wifi add-network <SSID> wpa2 <PSK>
 # Reboot into TWRP
 adb reboot recovery
 
-# Convert from TWRP
+# Install from TWRP
 adb push Gateway.apk /sdcard
 adb push privapp-permissions-net.mfuertes.aagw.gateway.xml /sdcard
 
@@ -30,16 +30,8 @@ adb shell mkdir -p /system/priv-app/net.mfuertes.aagw.gateway/
 adb shell chmod 0755 /system/priv-app/net.mfuertes.aagw.gateway
 adb shell cp /data/app/**/*net.mfuertes.aagw.gateway*/base.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
 adb shell cp /sdcard/Gateway.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
+adb shell cp /sdcard/privapp-permissions-net.mfuertes.aagw.gateway.xml /system/etc/permissions/
 
-adb shell twrp mount /system
-adb shell twrp remountrw /system
-adb shell mkdir -p /system/priv-app/net.mfuertes.aagw.bluetoothconnect/
-adb shell chmod 0755 /system/priv-app/net.mfuertes.aagw.bluetoothconnect
-adb shell cp /data/app/**/*net.mfuertes.aagw.bluetooth*/base.apk /system/priv-app/net.mfuertes.aagw.bluetoothconnect/base.apk
-adb shell cp /sdcard/Gateway.apk /system/priv-app/net.mfuertes.aagw.bluetoothconnect/base.apk
-
-adb shell chmod 0644 /system/priv-app/net.mfuertes.aagw.bluetoothconnect/base.apk
-adb shell cp /sdcard/privapp-permissions-net.mfuertes.aagw.bluetoothconnect.xml /system/etc/permissions/
 
 # Auto start AP
 adb shell twrp mount /system

@@ -38,7 +38,7 @@
         android:theme="@android:style/Theme.DeviceDefault">
 
         <receiver
-            android:name=".connectivity.PairingReceiver"
+            android:name=".connectivity.bluetooth.PairingReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

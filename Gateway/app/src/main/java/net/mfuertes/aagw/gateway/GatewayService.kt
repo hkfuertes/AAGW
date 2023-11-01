@@ -16,6 +16,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import net.mfuertes.aagw.gateway.connectivity.UsbHelper
 import net.mfuertes.aagw.gateway.connectivity.WifiHelper
 import net.mfuertes.aagw.gateway.connectivity.bluetooth.BluetoothProfileHandler
 import java.io.*
@@ -33,7 +34,6 @@ class GatewayService : Service() {
         private const val DEFAULT_CONNECTION_TIMEOUT = 60 // 1min
     }
 
-    private var mReservation: WifiManager.LocalOnlyHotspotReservation? = null
     private var mLogCommunication = false
 
     private var mRunning = false
@@ -101,27 +101,8 @@ class GatewayService : Service() {
             return START_REDELIVER_INTENT
         }
 
-        val wifiHotspotInfo = WifiHelper.WifiHotspotInfo(
-            "MIWIFI_2G_kSds_EXT",
-            "Zk45RnvF",
-            "00:0C:43:E1:76:20",
-            ipAddress = WifiHelper.getIPAddress(true)!!
-        )
-
-
-//        WifiHelper.startAp(this){success, reservation, ipAddress ->
-//            Log.d("AP", success.toString())
-//            Log.d("AP", reservation.toString())
-//            if(!success) return@startAp
-//
-//            mReservation = reservation
-//
-//            wifiHotspotInfo = WifiHelper.WifiHotspotInfo(
-//                reservation!!.softApConfiguration.ssid!!,
-//                reservation!!.softApConfiguration.passphrase!!,
-//                ipAddress = WifiHelper.getIPAddress(true)!!
-//            )
-//            Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
+        WifiHelper.startAp(this){ wifiHotspotInfo ->
+            Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
 
             //BLUETOOTH_CONNECT permission
             val pairedDevices: Set<BluetoothDevice> = BluetoothAdapter.getDefaultAdapter().getBondedDevices()
@@ -134,7 +115,7 @@ class GatewayService : Service() {
             }
 
             //NSD discovery!
-            //WifiHelper.registerService(this, 5288)
+            WifiHelper.registerService(this, 5288)
 
             //Manually start AA.
             mRunning = true
@@ -142,7 +123,7 @@ class GatewayService : Service() {
             mLocalComplete = false
 
             mMainHandlerThread.start()
-//        }
+        }
 
         return START_REDELIVER_INTENT
     }
@@ -153,7 +134,7 @@ class GatewayService : Service() {
 
     private fun stopService() {
         WifiHelper.unRegisterService(this)
-        // UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
+        UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
         stopForeground(true)
         stopSelf()
     }

@@ -8,11 +8,12 @@ import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
+import android.util.Log
+import com.lordcodes.turtle.shellRun
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.Collections
 import java.util.Locale
-
 
 object WifiHelper {
     /**
@@ -55,7 +56,7 @@ object WifiHelper {
     @SuppressLint("MissingPermission")
     fun startAp(
         context: Context,
-        callback: (success: Boolean, reservation: WifiManager.LocalOnlyHotspotReservation?, ipAddress: String?) -> Unit
+        callback: (wifiHotspotInfo: WifiHotspotInfo?) -> Unit
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -65,17 +66,25 @@ object WifiHelper {
 
                     override fun onStarted(reservation: WifiManager.LocalOnlyHotspotReservation) {
                         super.onStarted(reservation)
-                        callback(true, reservation, getIPAddress(true))
+
+                        val wifiHotspotInfo = WifiHotspotInfo(
+                            reservation,
+                            reservation.softApConfiguration.ssid!!,
+                            reservation.softApConfiguration.passphrase!!,
+                            getMacAddress("wlan0")!!,
+                            getIPAddress(true)!!
+                        )
+                        callback(wifiHotspotInfo)
                     }
 
                     override fun onStopped() {
                         super.onStopped()
-                        callback(false, null, null)
+                        callback(null)
                     }
 
                     override fun onFailed(reason: Int) {
                         super.onFailed(reason)
-                        callback(false, null, null)
+                        callback(null)
                     }
                 }, Handler()
             )
@@ -107,42 +116,28 @@ object WifiHelper {
             unregisterService(registrationListener)
         }
     }
-
-    fun getMacAddr(): String? {
-        try {
-            val all: List<NetworkInterface> =
-                Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (nif in all) {
-                if (!nif.name.equals("wlan0", ignoreCase = true)) continue
-                val macBytes = nif.hardwareAddress ?: return ""
-                val res1 = StringBuilder()
-                for (b in macBytes) {
-                    // res1.append(Integer.toHexString(b & 0xFF) + ":");
-                    res1.append(String.format("%02X:", b))
-                }
-                if (res1.length > 0) {
-                    res1.deleteCharAt(res1.length - 1)
-                }
-                return res1.toString()
+    // Theoretically no root required...
+    fun getMacAddress(iface: String): String? {
+        // 30: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000\    link/ether c0:ee:fb:9a:00:76 brd ff:ff:ff:ff:ff:ff
+        val cmd = "ip -o link".split(" ")
+        val retVal = shellRun(cmd.first(), cmd.subList(1, cmd.size))
+        retVal.split("\n").also { list ->
+            list.filter {it.contains(iface)}.also {
+                if(it.isEmpty()) return null
+                return it.first().split("link/ether").last().trim().split(" ").first()
             }
-        } catch (ex: Exception) {
-            //handle exception
         }
-        return ""
     }
 
 
     data class WifiHotspotInfo(
+        val reservation: WifiManager.LocalOnlyHotspotReservation,
         val ssid: String,
         val psk: String,
-        val bssid: String = "*", //Any?
+        val bssid: String,
         val ipAddress: String,
         val securityMode: WifiInfoRequestOuterClass.SecurityMode = WifiInfoRequestOuterClass.SecurityMode.UNKNOWN_SECURITY_MODE,
         val accessPointType: WifiInfoRequestOuterClass.AccessPointType = WifiInfoRequestOuterClass.AccessPointType.DYNAMIC
     )
-
-    fun disableMACRandomization(){
-
-    }
 
 }
