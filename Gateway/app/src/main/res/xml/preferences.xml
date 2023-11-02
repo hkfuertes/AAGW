@@ -18,18 +18,16 @@
         <EditTextPreference
             android:key="SSID_KEY"
             android:title="Wifi Name"
-            android:defaultValue="00:00:00:00:00:00"
             />
         <EditTextPreference
             android:key="PSK_KEY"
             android:title="Wifi Password"
-            android:defaultValue="00:00:00:00:00:00"
             />
         <EditTextPreference
             android:key="BSSID_KEY"
             android:title="BSSID/MAC"
             android:defaultValue="c0:ee:fb:9a:00:76"
-            android:summary="c0:ee:fb:9a:00:76"
+            android:summary="Looks like: 00:00:00:00:00:00"
             />
     </PreferenceCategory>
 

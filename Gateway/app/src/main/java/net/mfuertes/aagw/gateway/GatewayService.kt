@@ -123,7 +123,6 @@ class GatewayService : Service() {
         mPsk = intent?.getStringExtra(PSK_KEY)
 
         if(mServerMode){
-            //NSD discovery!
             WifiHelper.registerService(this, 5288)
 
             if(mSelfAP){
@@ -263,8 +262,10 @@ class GatewayService : Service() {
                     mPhoneOutputStream = FileOutputStream(fd)
 
                     // Fake HandShake?
-                    // mPhoneInputStream!!.read(ByteArray(16384))
-                    // mPhoneOutputStream!!.write(byteArrayOf(0, 3, 0, 8, 0, 2, 0, 1, 0, 4, 0, 0))
+                    if(!mServerMode && false){
+                        mPhoneInputStream!!.read(ByteArray(16384))
+                        mPhoneOutputStream!!.write(byteArrayOf(0, 3, 0, 8, 0, 2, 0, 1, 0, 4, 0, 0))
+                    }
                 }
 
                 if (mUsbFileDescriptor == null || mPhoneInputStream == null || mPhoneOutputStream == null) {
@@ -319,9 +320,7 @@ class GatewayService : Service() {
 
     }
 
-    private inner class TCPPollThread(server: Boolean = true) : Thread() {
-
-        val serverMode = server
+    private inner class TCPPollThread() : Thread() {
 
         var mServerSocket: ServerSocket? = null
         var mSocket: Socket? = null
@@ -342,7 +341,7 @@ class GatewayService : Service() {
             super.run()
 
             try {
-                if(serverMode){
+                if(mServerMode){
                     mServerSocket = ServerSocket(5288, 5).apply {
                         soTimeout = mClientConnectionTimeout * 1000
                         reuseAddress = true
@@ -389,9 +388,11 @@ class GatewayService : Service() {
                     mSocketInputStream = DataInputStream(it.getInputStream())
 
                     //Fake Handshake?
-                    // mSocketOutputStream!!.write(byteArrayOf(0, 3, 0, 6, 0, 1, 0, 1, 0, 2))
-                    // mSocketOutputStream!!.flush()
-                    // mSocketInputStream!!.read(ByteArray(12))
+                    if(!mServerMode && false){
+                         mSocketOutputStream!!.write(byteArrayOf(0, 3, 0, 6, 0, 1, 0, 1, 0, 2))
+                         mSocketOutputStream!!.flush()
+                         mSocketInputStream!!.read(ByteArray(12))
+                    }
                 }
 
                 Log.i(LOG_TAG, "TCP connected")
