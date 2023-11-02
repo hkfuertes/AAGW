@@ -1,5 +1,6 @@
 package net.mfuertes.aagw.gateway
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -8,6 +9,7 @@ import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbManager
 import android.net.wifi.WifiManager
@@ -86,7 +88,6 @@ class GatewayService : Service() {
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
-    @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
@@ -100,12 +101,25 @@ class GatewayService : Service() {
             stopService()
             return START_REDELIVER_INTENT
         }
+        //NSD discovery!
+        WifiHelper.registerService(this, 5288)
 
         WifiHelper.startAp(this){ wifiHotspotInfo ->
             Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
 
-            //BLUETOOTH_CONNECT permission
-            val pairedDevices: Set<BluetoothDevice> = BluetoothAdapter.getDefaultAdapter().getBondedDevices()
+            /**
+             * Permissions:
+             * - android.permission.BLUETOOTH_CONNECT
+             */
+            if(
+                checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                ){
+                Log.e(LOG_TAG, "Permission BLUETOOTH_CONNECT not granted")
+                stopService()
+                return@startAp
+            }
+            val pairedDevices: Set<BluetoothDevice> = BluetoothAdapter.getDefaultAdapter().bondedDevices
 
             for(device in pairedDevices){
                 //Start Native Flow
@@ -113,9 +127,6 @@ class GatewayService : Service() {
                     Log.d("NATIVE_FLOW", "Bluetooth: $it")
                 }
             }
-
-            //NSD discovery!
-            WifiHelper.registerService(this, 5288)
 
             //Manually start AA.
             mRunning = true

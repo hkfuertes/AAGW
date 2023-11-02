@@ -10,6 +10,8 @@ object UsbHelper {
     /**
      * From UsbManager class
      * https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/hardware/usb/UsbManager.java
+     * Permissions:
+     * - android.permission.MANAGE_USB (restricted --> `priv-app` required!)
      */
     const val FUNCTION_NONE: Long = 0
     const val FUNCTION_MTP = (1 shl 2).toLong()

@@ -17,6 +17,7 @@ adb shell cp /sdcard/privapp-permissions-net.mfuertes.aagw.gateway.xml /system/e
 adb shell chmod 0644 /system/etc/permissions/privapp-permissions-net.mfuertes.aagw.gateway.xml
 ```
 
+
 ## Operation Modes
 App needs to be in `/system/priv-app` for auto connection (headless, omit first time aproval in gui) and UsbDevice gadget mode reset.
 - **Client**: The device connects to master wifi where HeadUnit Runs as server.
@@ -30,8 +31,8 @@ App needs to be in `/system/priv-app` for auto connection (headless, omit first 
       ```shell
       abd shell pm grant net.mfuertes.aagw.gateway android.permission.ACCESS_FINE_LOCATION
       ```
+      > LOCATION (GPS) has to be enabled for the HotSpot to be brought up!
   - The device does not have **AP** capabilities:
     - It will need to be connected to an external Wifi (only device, no master)
     - `SSID, PSK, BSSID` have to be specified in the config file (TODO).
     - It will go through bonded Bluetooth devices trying to initiate Native Android Auto connection.
-
