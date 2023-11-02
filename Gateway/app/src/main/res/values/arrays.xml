@@ -1,0 +1,10 @@
+<resources>
+    <string-array name="op_mode_options" >
+        <item>Client Mode</item>
+        <item>Server Mode</item>
+    </string-array>
+    <string-array name="op_mode_values" >
+        <item>client</item>
+        <item>server</item>
+    </string-array>
+</resources>

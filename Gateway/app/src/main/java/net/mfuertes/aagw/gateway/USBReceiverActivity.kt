@@ -1,20 +1,59 @@
 package net.mfuertes.aagw.gateway
 
 import android.Manifest
-import android.app.Activity
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.pm.PackageManager
 import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbManager
 import android.os.Build
 import android.os.Bundle
+import android.preference.PreferenceActivity
+import android.preference.PreferenceManager
 import android.util.Log
-import net.mfuertes.aagw.gateway.connectivity.WifiHelper
+import java.util.prefs.PreferenceChangeEvent
+import java.util.prefs.PreferenceChangeListener
 
-class USBReceiverActivity : Activity() {
+@SuppressLint("ExportedPreferenceActivity")
+class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListener {
+    companion object{
+        const val NAME = "GATEWAY"
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_usbreceiver)
+        addPreferencesFromResource(R.xml.preferences)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+
+        val serverModeconfig = findPreference("server_mode_config").also {
+            it.isEnabled = prefs.getBoolean(GatewayService.SERVER_MODE_KEY, false)
+        }
+
+        val ssid = findPreference(GatewayService.SSID_KEY).also {
+            it.isEnabled = !prefs.getBoolean(GatewayService.SELF_AP_KEY, false)
+        }
+
+        val psk = findPreference(GatewayService.PSK_KEY).also {
+            it.isEnabled = !prefs.getBoolean(GatewayService.SELF_AP_KEY, false)
+        }
+
+        findPreference(GatewayService.SERVER_MODE_KEY).apply {
+            setOnPreferenceChangeListener{ _, value ->
+                serverModeconfig.isEnabled = (value == true)
+                return@setOnPreferenceChangeListener true
+            }
+        }
+
+        findPreference(GatewayService.SELF_AP_KEY).apply {
+            setOnPreferenceChangeListener{ _, value ->
+                ssid.isEnabled = (value == false)
+                psk.isEnabled = (value == false)
+                return@setOnPreferenceChangeListener true
+            }
+        }
+
     }
 
     override fun onResume() {
@@ -31,18 +70,27 @@ class USBReceiverActivity : Activity() {
             ).asList(),0)
         }
 
-        WifiHelper.getMacAddress("wlan0")?.let {
-            Log.d("MAC_ADDRESS", it)
-        }
         if (intent.action?.equals(UsbManager.ACTION_USB_ACCESSORY_ATTACHED) == true) {
             val accessory = intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY) as UsbAccessory?
             accessory?.also { usbAccessory ->
                 val i = Intent(this, GatewayService::class.java)
                 i.putExtra(UsbManager.EXTRA_ACCESSORY, usbAccessory)
-                this.startForegroundService(i)
+                fillIntent(i).also {
+                    this.startForegroundService(it)
+                }
             }
             finish()
         }
+    }
+
+    private fun fillIntent(intent: Intent): Intent{
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
+        intent.putExtra(GatewayService.SERVER_MODE_KEY, sharedPref.getBoolean(GatewayService.SERVER_MODE_KEY, false))
+        intent.putExtra(GatewayService.SELF_AP_KEY, sharedPref.getBoolean(GatewayService.SELF_AP_KEY, false))
+        intent.putExtra(GatewayService.SSID_KEY, sharedPref.getString(GatewayService.SSID_KEY, null))
+        intent.putExtra(GatewayService.PSK_KEY, sharedPref.getString(GatewayService.PSK_KEY, null))
+        intent.putExtra(GatewayService.BSSID_KEY, sharedPref.getString(GatewayService.BSSID_KEY, null))
+        return intent
     }
 
     // Function to check and request permission.
@@ -53,6 +101,10 @@ class USBReceiverActivity : Activity() {
                 requestPermissions( arrayOf(permission), requestCode)
             }
         }
+    }
+
+    override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
+        TODO("Not yet implemented")
     }
 
 }

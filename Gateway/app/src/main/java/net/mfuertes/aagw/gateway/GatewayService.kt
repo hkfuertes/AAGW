@@ -34,6 +34,12 @@ class GatewayService : Service() {
 
         private const val DEFAULT_HANDSHAKE_TIMEOUT = 15
         private const val DEFAULT_CONNECTION_TIMEOUT = 60 // 1min
+
+        const val SERVER_MODE_KEY = "SERVER_MODE_KEY"
+        const val SELF_AP_KEY = "SELF_AP_KEY"
+        const val SSID_KEY = "SSID_KEY"
+        const val PSK_KEY = "PSK_KEY"
+        const val BSSID_KEY = "BSSID_KEY"
     }
 
     private var mLogCommunication = false
@@ -57,6 +63,13 @@ class GatewayService : Service() {
 
     private val mUsbManager: UsbManager by lazy { getSystemService(UsbManager::class.java) }
     private val mBluetoothProfileHandler: BluetoothProfileHandler by lazy { BluetoothProfileHandler(this) }
+
+    private var mServerMode = false
+    private var mSelfAP = false
+    private var mSsid: String? = null
+    private var mPsk: String? = null
+    private var mBssid: String? = null
+
 
     override fun onCreate() {
         super.onCreate()
@@ -101,42 +114,65 @@ class GatewayService : Service() {
             stopService()
             return START_REDELIVER_INTENT
         }
-        //NSD discovery!
-        WifiHelper.registerService(this, 5288)
 
-        WifiHelper.startAp(this){ wifiHotspotInfo ->
-            Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
+        // Recover it from preferences!
+        mServerMode = intent?.getBooleanExtra(SERVER_MODE_KEY, false) == true
+        mSelfAP = intent?.getBooleanExtra(SELF_AP_KEY, false) == true
+        mSsid = intent?.getStringExtra(SSID_KEY)
+        mBssid = intent?.getStringExtra(BSSID_KEY)
+        mPsk = intent?.getStringExtra(PSK_KEY)
 
-            /**
-             * Permissions:
-             * - android.permission.BLUETOOTH_CONNECT
-             */
-            if(
-                checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
-                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                ){
-                Log.e(LOG_TAG, "Permission BLUETOOTH_CONNECT not granted")
-                stopService()
-                return@startAp
-            }
-            val pairedDevices: Set<BluetoothDevice> = BluetoothAdapter.getDefaultAdapter().bondedDevices
+        if(mServerMode){
+            //NSD discovery!
+            WifiHelper.registerService(this, 5288)
 
-            for(device in pairedDevices){
-                //Start Native Flow
-                mBluetoothProfileHandler.connectDevice(device, DEFAULT_HANDSHAKE_TIMEOUT * 1000L, wifiHotspotInfo!!){
-                    Log.d("NATIVE_FLOW", "Bluetooth: $it")
+            if(mSelfAP){
+                WifiHelper.startAp(this, mBssid!!) { wifiHotspotInfo ->
+                    if (wifiHotspotInfo != null) {
+                        mStartService(wifiHotspotInfo)
+                    }
                 }
+            }else{
+                mStartService(
+                    WifiHelper.WifiHotspotInfo(
+                    null, mSsid!!, mPsk!!, mBssid!!, WifiHelper.getIPAddress()!!
+                ))
             }
-
-            //Manually start AA.
-            mRunning = true
-            mUsbComplete = false
-            mLocalComplete = false
-
-            mMainHandlerThread.start()
         }
 
+        //Manually start AA.
+        mRunning = true
+        mUsbComplete = false
+        mLocalComplete = false
+
+        mMainHandlerThread.start()
+
         return START_REDELIVER_INTENT
+    }
+
+    private fun mStartService(wifiHotspotInfo: WifiHelper.WifiHotspotInfo){
+        Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
+
+        /**
+         * Permissions:
+         * - android.permission.BLUETOOTH_CONNECT
+         */
+        if(
+            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+            && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        ){
+            Log.e(LOG_TAG, "Permission BLUETOOTH_CONNECT not granted")
+            stopService()
+            return
+        }
+        val pairedDevices: Set<BluetoothDevice> = BluetoothAdapter.getDefaultAdapter().bondedDevices
+
+        for(device in pairedDevices){
+            //Start Native Flow
+            mBluetoothProfileHandler.connectDevice(device, DEFAULT_HANDSHAKE_TIMEOUT * 1000L, wifiHotspotInfo!!){
+                Log.d("NATIVE_FLOW", "Bluetooth: $it")
+            }
+        }
     }
 
     private fun onMainHandlerThreadStopped() {

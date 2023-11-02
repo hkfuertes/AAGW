@@ -26,7 +26,7 @@ App needs to be in `/system/priv-app` for auto connection (headless, omit first 
   - The device has **AP** capabilities:
     - It will go through bonded Bluetooth devices trying to initiate Native Android Auto connection.
     - Regular (non root) `adb` has to be able to execute `ip -o link`
-    - Location permission has to be manually enabled via UI or: 
+    - Location permission has to be enabled via UI or: 
       
       ```shell
       abd shell pm grant net.mfuertes.aagw.gateway android.permission.ACCESS_FINE_LOCATION

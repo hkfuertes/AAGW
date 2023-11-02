@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+        android:key="SERVER_MODE_KEY"
+        android:title="Server Mode"
+        android:defaultValue="false"
+        android:summary="Gateway runs in server mode"
+        />
+    <PreferenceCategory
+        android:key="server_mode_config"
+        android:title="Settings">
+        <CheckBoxPreference
+            android:key="SELF_AP_KEY"
+            android:title="Use internal HotSpot"
+            android:defaultValue="true"
+            android:summary="Launch and use own hotspot"
+            />
+        <EditTextPreference
+            android:key="SSID_KEY"
+            android:title="Wifi Name"
+            android:defaultValue="00:00:00:00:00:00"
+            />
+        <EditTextPreference
+            android:key="PSK_KEY"
+            android:title="Wifi Password"
+            android:defaultValue="00:00:00:00:00:00"
+            />
+        <EditTextPreference
+            android:key="BSSID_KEY"
+            android:title="BSSID/MAC"
+            android:defaultValue="c0:ee:fb:9a:00:76"
+            android:summary="c0:ee:fb:9a:00:76"
+            />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="server_mode_config"
+        android:title="Permissions">
+        <Preference
+            android:enabled="false"
+            android:title="MANAGE_USB"
+            android:summary="Needed for controlling USB port"
+            />
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

@@ -8,9 +8,6 @@ import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.Collections
@@ -23,7 +20,7 @@ object WifiHelper {
      * @param useIPv4   true=return ipv4, false=return ipv6
      * @return  address or empty string
      */
-    fun getIPAddress(useIPv4: Boolean): String? {
+    fun getIPAddress(useIPv4: Boolean = true): String? {
         try {
             val interfaces: List<NetworkInterface> =
                 Collections.list(NetworkInterface.getNetworkInterfaces())
@@ -55,9 +52,16 @@ object WifiHelper {
         return ""
     }
 
+    /**
+     * Start LocalOnlyHotSpot
+     * Permission:
+     * - android.permission.CHANGE_WIFI_STATE
+     * - android.permission.ACCESS_FINE_LOCATION
+     */
     @SuppressLint("MissingPermission")
     fun startAp(
         context: Context,
+        bssid: String,
         callback: (wifiHotspotInfo: WifiHotspotInfo?) -> Unit
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -73,7 +77,7 @@ object WifiHelper {
                             reservation,
                             reservation.softApConfiguration.ssid!!,
                             reservation.softApConfiguration.passphrase!!,
-                            getMacAddress("wlan0")?: "c0:ee:fb:9a:00:76",
+                            bssid,
                             getIPAddress(true)!!
                         )
                         callback(wifiHotspotInfo)
@@ -114,47 +118,18 @@ object WifiHelper {
     }
 
     fun unRegisterService(context: Context) {
-        (context.getSystemService(Context.NSD_SERVICE) as NsdManager).apply {
-            unregisterService(registrationListener)
-        }
-    }
-    // Theoretically no root required...
-    fun getMacAddress(iface: String): String? {
-        // 30: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000\    link/ether c0:ee:fb:9a:00:76 brd ff:ff:ff:ff:ff:ff
-        val cmd = "ip -o link"
-        val retVal = runCommand(cmd) ?: return null
-        retVal.split("\n").also { list ->
-            list.filter {it.contains(iface)}.also {
-                if(it.isEmpty()) return null
-                return it.first().split("link/ether").last().trim().split(" ").first()
+        try{
+            (context.getSystemService(Context.NSD_SERVICE) as NsdManager).apply {
+                unregisterService(registrationListener)
             }
-        }
-    }
-
-    private fun runCommand(cmd: String): String? {
-        return try {
-            val process = Runtime.getRuntime().exec(cmd)
-            val reader = BufferedReader(
-                InputStreamReader(process.inputStream)
-            )
-            var read: Int
-            val buffer = CharArray(4096)
-            val output = StringBuffer()
-            while (reader.read(buffer).also { read = it } > 0) {
-                output.append(buffer, 0, read)
-            }
-            reader.close()
-            process.waitFor()
-            output.toString()
-        } catch (e: Exception) {
+        }catch (e: Exception){
             e.printStackTrace()
-            null
         }
     }
 
 
     data class WifiHotspotInfo(
-        val reservation: WifiManager.LocalOnlyHotspotReservation,
+        val reservation: WifiManager.LocalOnlyHotspotReservation?,
         val ssid: String,
         val psk: String,
         val bssid: String,
