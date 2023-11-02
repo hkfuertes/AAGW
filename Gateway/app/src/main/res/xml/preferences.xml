@@ -49,11 +49,6 @@
             android:key="location_permissions"
             android:title="Request Location Permissions"
             android:summary="Required to bring up HotSpot"/>
-
-        <Preference
-            android:key="manage_usb_permission"
-            android:title="Manage USB Permission"
-            android:summary="Enables USB extra controls"/>
     </PreferenceCategory>
 
 

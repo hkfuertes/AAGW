@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceActivity
 import android.preference.PreferenceManager
+import android.util.Log
 import net.mfuertes.aagw.gateway.connectivity.WifiHelper
 
 @SuppressLint("ExportedPreferenceActivity")
@@ -26,23 +27,10 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
         addPreferencesFromResource(R.xml.preferences)
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
-        findPreference("manage_usb_permission")?.apply {
-            isEnabled = !isPermissionAccepted(listOf("android.permission.MANAGE_USB"))
-            setOnPreferenceClickListener {
-                AlertDialog.Builder(context).apply {
-                    title = "Manage USB Permission"
-                    setMessage(
-                        "You need to make this app an system app by moving it to /system/priv-app " +
-                                "and ensure that MANAGE_USB permission is whitelisted. " +
-                                "This would require your device to be rooted."
-                    )
-                    setPositiveButton("Okay") { _, _ ->
-                        // Do nothing
-                    }
-                    show()
-                }
-                true
-            }
+        // Setting default device MacAddress if found...
+        WifiHelper.getMacAddress("wlan0")?.let {
+            Log.d("MAC_ADDRESS", it)
+            prefs.edit().putString(GatewayService.MAC_ADDRESS_KEY, it).commit()
         }
 
         findPreference("bluetooth_permissions")?.apply {
@@ -85,9 +73,6 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
 
         findPreference("MAC_ADDRESS_KEY")?.apply {
             setEnabled(WifiHelper.getMacAddress("wlan0") == null)
-            WifiHelper.getMacAddress("wlan0")?.let {
-                setSummary(it)
-            }
         }
 
     }
@@ -145,7 +130,7 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
     }
 
     private fun isPermissionAccepted(permissions: List<String>): Boolean {
-        return permissions.all { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
+        return permissions.all { applicationContext.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
     }
 
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {

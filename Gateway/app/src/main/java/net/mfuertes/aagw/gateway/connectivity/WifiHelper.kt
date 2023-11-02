@@ -143,7 +143,8 @@ object WifiHelper {
                 return filtered.first().split("link/ether")
                     .last().trim().split(" ").first()
             }
-        }catch(ex: RuntimeException){
+        }catch(ex: Exception){
+            ex.printStackTrace()
             return null
         }
     }

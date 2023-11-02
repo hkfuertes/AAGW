@@ -37,8 +37,12 @@ object UsbHelper {
     @JvmStatic
     fun setMode(usbManager: UsbManager, function: Long){
         thread {
-            if(getCurrentFunctions(usbManager) != function){
-                setCurrentFunctions(usbManager, function)
+            try{
+                if(getCurrentFunctions(usbManager) != function){
+                    setCurrentFunctions(usbManager, function)
+                }
+            }catch (ex: Exception){
+                ex.printStackTrace()
             }
         }
     }
