@@ -2,7 +2,7 @@ package net.mfuertes.aagw.gateway
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
@@ -13,44 +13,80 @@ import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceActivity
 import android.preference.PreferenceManager
-import android.util.Log
-import java.util.prefs.PreferenceChangeEvent
-import java.util.prefs.PreferenceChangeListener
+import net.mfuertes.aagw.gateway.connectivity.WifiHelper
 
 @SuppressLint("ExportedPreferenceActivity")
 class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListener {
-    companion object{
+    companion object {
         const val NAME = "GATEWAY"
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         addPreferencesFromResource(R.xml.preferences)
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
-        val serverModeconfig = findPreference("server_mode_config").also {
-            it.isEnabled = prefs.getBoolean(GatewayService.SERVER_MODE_KEY, false)
-        }
-
-        val ssid = findPreference(GatewayService.SSID_KEY).also {
-            it.isEnabled = !prefs.getBoolean(GatewayService.SELF_AP_KEY, false)
-        }
-
-        val psk = findPreference(GatewayService.PSK_KEY).also {
-            it.isEnabled = !prefs.getBoolean(GatewayService.SELF_AP_KEY, false)
-        }
-
-        findPreference(GatewayService.SERVER_MODE_KEY).apply {
-            setOnPreferenceChangeListener{ _, value ->
-                serverModeconfig.isEnabled = (value == true)
-                return@setOnPreferenceChangeListener true
+        findPreference("manage_usb_permission")?.apply {
+            isEnabled = !isPermissionAccepted(listOf("android.permission.MANAGE_USB"))
+            setOnPreferenceClickListener {
+                AlertDialog.Builder(context).apply {
+                    title = "Manage USB Permission"
+                    setMessage(
+                        "You need to make this app an system app by moving it to /system/priv-app " +
+                                "and ensure that MANAGE_USB permission is whitelisted. " +
+                                "This would require your device to be rooted."
+                    )
+                    setPositiveButton("Okay") { _, _ ->
+                        // Do nothing
+                    }
+                    show()
+                }
+                true
             }
         }
 
-        findPreference(GatewayService.SELF_AP_KEY).apply {
-            setOnPreferenceChangeListener{ _, value ->
-                ssid.isEnabled = (value == false)
-                psk.isEnabled = (value == false)
-                return@setOnPreferenceChangeListener true
+        findPreference("bluetooth_permissions")?.apply {
+            isEnabled = (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                            && !isPermissionAccepted(
+                        arrayOf(
+                            Manifest.permission.BLUETOOTH_CONNECT
+                        ).asList()
+                    )
+                    )
+            setOnPreferenceClickListener {
+                checkPermission(
+                    arrayOf(
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ).asList(), 0
+                )
+                true
+            }
+        }
+        findPreference("location_permissions")?.apply {
+            isEnabled =
+                !isPermissionAccepted(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ).asList()
+                )
+            setOnPreferenceClickListener {
+                checkPermission(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    ).asList(), 0
+                )
+                true
+            }
+        }
+
+        findPreference("MAC_ADDRESS_KEY")?.apply {
+            setEnabled(WifiHelper.getMacAddress("wlan0") == null)
+            WifiHelper.getMacAddress("wlan0")?.let {
+                setSummary(it)
             }
         }
 
@@ -58,17 +94,6 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
 
     override fun onResume() {
         super.onResume()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            checkPermission(arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ).asList(),0)
-        }else{
-            checkPermission(arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ).asList(),0)
-        }
 
         if (intent.action?.equals(UsbManager.ACTION_USB_ACCESSORY_ATTACHED) == true) {
             val accessory = intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY) as UsbAccessory?
@@ -83,24 +108,44 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
         }
     }
 
-    private fun fillIntent(intent: Intent): Intent{
+    private fun fillIntent(intent: Intent): Intent {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
-        intent.putExtra(GatewayService.SERVER_MODE_KEY, sharedPref.getBoolean(GatewayService.SERVER_MODE_KEY, false))
-        intent.putExtra(GatewayService.SELF_AP_KEY, sharedPref.getBoolean(GatewayService.SELF_AP_KEY, false))
-        intent.putExtra(GatewayService.SSID_KEY, sharedPref.getString(GatewayService.SSID_KEY, null))
+        intent.putExtra(
+            GatewayService.SERVER_MODE_KEY,
+            sharedPref.getBoolean(GatewayService.SERVER_MODE_KEY, false)
+        )
+        intent.putExtra(
+            GatewayService.SELF_EXT_KEY,
+            sharedPref.getBoolean(GatewayService.SELF_EXT_KEY, false)
+        )
+        intent.putExtra(
+            GatewayService.SSID_KEY,
+            sharedPref.getString(GatewayService.SSID_KEY, null)
+        )
         intent.putExtra(GatewayService.PSK_KEY, sharedPref.getString(GatewayService.PSK_KEY, null))
-        intent.putExtra(GatewayService.BSSID_KEY, sharedPref.getString(GatewayService.BSSID_KEY, null))
+        intent.putExtra(
+            GatewayService.BSSID_KEY,
+            sharedPref.getString(GatewayService.BSSID_KEY, null)
+        )
+        intent.putExtra(
+            GatewayService.MAC_ADDRESS_KEY,
+            sharedPref.getString(GatewayService.MAC_ADDRESS_KEY, WifiHelper.getMacAddress("wlan0"))
+        )
         return intent
     }
 
     // Function to check and request permission.
     private fun checkPermission(permissions: List<String>, requestCode: Int) {
-        for(permission in permissions){
+        for (permission in permissions) {
             if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 // Requesting the permission
-                requestPermissions( arrayOf(permission), requestCode)
+                requestPermissions(arrayOf(permission), requestCode)
             }
         }
+    }
+
+    private fun isPermissionAccepted(permissions: List<String>): Boolean {
+        return permissions.all { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
     }
 
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {

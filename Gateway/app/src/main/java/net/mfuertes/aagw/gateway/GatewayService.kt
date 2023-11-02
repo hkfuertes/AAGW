@@ -1,7 +1,6 @@
 package net.mfuertes.aagw.gateway
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -20,7 +19,7 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import net.mfuertes.aagw.gateway.connectivity.UsbHelper
 import net.mfuertes.aagw.gateway.connectivity.WifiHelper
-import net.mfuertes.aagw.gateway.connectivity.bluetooth.BluetoothProfileHandler
+import net.mfuertes.aagw.gateway.connectivity.BluetoothProfileHandler
 import java.io.*
 import java.net.*
 
@@ -36,7 +35,8 @@ class GatewayService : Service() {
         private const val DEFAULT_CONNECTION_TIMEOUT = 60 // 1min
 
         const val SERVER_MODE_KEY = "SERVER_MODE_KEY"
-        const val SELF_AP_KEY = "SELF_AP_KEY"
+        const val SELF_EXT_KEY = "SELF_EXT_KEY"
+        const val MAC_ADDRESS_KEY = "MAC_ADDRESS_KEY"
         const val SSID_KEY = "SSID_KEY"
         const val PSK_KEY = "PSK_KEY"
         const val BSSID_KEY = "BSSID_KEY"
@@ -69,6 +69,8 @@ class GatewayService : Service() {
     private var mSsid: String? = null
     private var mPsk: String? = null
     private var mBssid: String? = null
+    private var mMacAddress: String? = null
+
 
 
     override fun onCreate() {
@@ -117,7 +119,8 @@ class GatewayService : Service() {
 
         // Recover it from preferences!
         mServerMode = intent?.getBooleanExtra(SERVER_MODE_KEY, false) == true
-        mSelfAP = intent?.getBooleanExtra(SELF_AP_KEY, false) == true
+        mSelfAP = intent?.getBooleanExtra(SELF_EXT_KEY, false) == false
+        mMacAddress = intent?.getStringExtra(MAC_ADDRESS_KEY)
         mSsid = intent?.getStringExtra(SSID_KEY)
         mBssid = intent?.getStringExtra(BSSID_KEY)
         mPsk = intent?.getStringExtra(PSK_KEY)
@@ -126,7 +129,7 @@ class GatewayService : Service() {
             WifiHelper.registerService(this, 5288)
 
             if(mSelfAP){
-                WifiHelper.startAp(this, mBssid!!) { wifiHotspotInfo ->
+                WifiHelper.startAp(this, mMacAddress!!) { wifiHotspotInfo ->
                     if (wifiHotspotInfo != null) {
                         mStartService(wifiHotspotInfo)
                     }

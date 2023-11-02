@@ -1,4 +1,4 @@
-package net.mfuertes.aagw.gateway.connectivity.bluetooth
+package net.mfuertes.aagw.gateway.connectivity
 
 import WifiInfoRequestOuterClass
 import WifiStartRequestOuterClass
@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Looper
 import android.util.Log
-import net.mfuertes.aagw.gateway.connectivity.WifiHelper
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.*

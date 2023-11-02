@@ -8,6 +8,10 @@ import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
+import android.util.Log
+import com.lordcodes.turtle.shellRun
+import java.io.File
+import java.lang.RuntimeException
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.Collections
@@ -118,12 +122,29 @@ object WifiHelper {
     }
 
     fun unRegisterService(context: Context) {
-        try{
+        try {
             (context.getSystemService(Context.NSD_SERVICE) as NsdManager).apply {
                 unregisterService(registrationListener)
             }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    /**
+     * Needs privileged!
+     */
+    fun getMacAddress(iface: String): String? {
+        try {
+            val cmd = "ip -o link".split(" ")
+            shellRun(cmd.first(), cmd.subList(1, cmd.size)).also { output ->
+                val filtered = output.split("\n").filter { it.contains(iface) }
+                if (filtered.isEmpty()) return null
+                return filtered.first().split("link/ether")
+                    .last().trim().split(" ").first()
+            }
+        }catch(ex: RuntimeException){
+            return null
         }
     }
 
