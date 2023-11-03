@@ -3,22 +3,22 @@
 <!-- aapt d permissions $apkdir -->
 <permissions>
     <privapp-permissions package="net.mfuertes.aagw.gateway">
-        <permissionname="android.permission.INTERNET" />
-        <permissionname="android.permission.FOREGROUND_SERVICE" />
+        <permission name="android.permission.INTERNET" />
+        <permission name="android.permission.FOREGROUND_SERVICE" />
 
         <!-- USB Operations -->
-        <permissionname="android.permission.MANAGE_USB"/>
+        <permission name="android.permission.MANAGE_USB"/>
 
         <!-- Bluetooth Flow -->
-        <permissionname="android.permission.BLUETOOTH" />
-        <permissionname="android.permission.BLUETOOTH_CONNECT" />
+        <permission name="android.permission.BLUETOOTH" />
+        <permission name="android.permission.BLUETOOTH_CONNECT" />
 
         <!-- HotSpot -->
-        <permissionname="android.permission.ACCESS_COARSE_LOCATION"/>
-        <permissionname="android.permission.ACCESS_FINE_LOCATION" />
-        <permissionname="android.permission.CHANGE_WIFI_STATE"/>
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION" />
+        <permission name="android.permission.CHANGE_WIFI_STATE"/>
 
         <!--to get DHCP in client mode -->
-        <permissionname="android.permission.ACCESS_WIFI_STATE"/>
+        <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </privapp-permissions>
 </permissions>
