@@ -5,7 +5,7 @@ Tested on:
 - **OnePlus X, _running LineageOS 18.1 (Android 11)_**: working in all modes.
   - The `LocalOnlyHotSpot` uses `wlan0` MAC as BSSID. It can be automatically detected if app is in `priv-app`, if wifi is enabled.
 - **FireStickTV, _running LineageOS 18.1 (Android 11)_**: working on Client Mode, _Maybe Server Mode using external AP (needs test)_
-  - It gets `wlan0` without `priv-app`.
+  - It gets `wlan0` MAC without `priv-app`.
   - The `LocalOnlyHotSpot` errores with reason `2`. My bet is that AP is not implemented on TV Roms.
 
 ## Operation Modes
