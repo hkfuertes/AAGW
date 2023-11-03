@@ -13,7 +13,6 @@ Tested on:
   - If headless use: `adb shell cmd -w add-network ssid wpa2 psk`
 - **Server**: It will go through bonded Bluetooth devices trying to initiate Native Android Auto connection.
   - Internal AP _a.k.a. `LocalOnlyHotSpot`_:
-    - It will go through bonded Bluetooth devices trying to initiate Native Android Auto connection.
     - The BSSID is the main attribute needed for Android Auto to connect. _On tested device LOHS will use WLAN0 MAC address as BSSID. A method is provided to auto discover it, but it will work depending on the device and if the app is system or not. It executes `ip -o link` to auto discover._
   - External AP:
     - Gateway has to be connected to this AP, even when no internet is detected.
