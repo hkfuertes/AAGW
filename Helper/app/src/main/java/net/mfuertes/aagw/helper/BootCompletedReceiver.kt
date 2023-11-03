@@ -3,11 +3,11 @@ package net.mfuertes.aagw.helper
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-
+import android.hardware.usb.UsbManager
 class BootCompletedReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        // This method is called when the BroadcastReceiver is receiving an Intent broadcast.
-        TODO("BootCompletedReceiver.onReceive() is not implemented")
+        PairingReceiver.makeDiscoverable()
+        UsbHelper.setMode(context.getSystemService(UsbManager::class.java) as UsbManager, UsbHelper.FUNCTION_MTP)
     }
 }
