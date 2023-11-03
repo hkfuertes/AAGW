@@ -1,5 +1,13 @@
 ## Android Auto Wirelesss Gateway
-Complete solution for using an old phone (Fire Stick TV) as a Android Auto Wireless Dongle.
+Complete solution for using an old phone as a Android Auto Wireless Dongle.
+Tested on:
+- **OnePlus X, _running LineageOS 18.1 (Android 11)_**: working in all modes.
+  - The `LocalOnlyHotSpot` uses `wlan0` MAC as BSSID. It can be automatically detected if app is in `priv-app`.
+  - If the app is `priv-app` it can also auto accept Android Auto connection and reset MTP mode when finished/errored.
+- **FireStickTV, _running LineageOS 18.1 (Android 11)_**: working on Client Mode, _Maybe Server Mode using external AP (needs test)_
+  - It gets `wlan0` without `priv-app`.
+  - The `LocalOnlyHotSpot` errores with reason `2`. My bet is that AP is not implemented on TV Roms.
+  - If the app is `priv-app` it can also auto accept Android Auto connection and reset MTP mode when finished/errored.
 
 ## Installing as `priv-app`
 ```shell
