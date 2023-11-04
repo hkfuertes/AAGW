@@ -1,40 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <CheckBoxPreference
-        android:key="SERVER_MODE_KEY"
-        android:title="Server Mode"
         android:defaultValue="false"
-        android:summary="Gateway runs in server mode"
-        />
+        android:key="SELF_EXT_KEY"
+        android:summary="Connect to external Wifi AP"
+        android:title="Use external HotSpot" />
+    <net.mfuertes.aagw.gateway.EditSummaryPreference
+        android:dependency="SELF_EXT_KEY"
+        android:key="SSID_KEY"
+        android:title="SSID" />
+    <net.mfuertes.aagw.gateway.EditSummaryPreference
+        android:dependency="SELF_EXT_KEY"
+        android:key="PSK_KEY"
+        android:title="PSK" />
+    <net.mfuertes.aagw.gateway.EditSummaryPreference
+        android:dependency="SELF_EXT_KEY"
+        android:key="BSSID_KEY"
+        android:title="BSSID" />
+
+
     <PreferenceCategory
         android:key="server_mode_config"
-        android:dependency="SERVER_MODE_KEY"
         android:title="Settings">
+
+        <Preference
+            android:key="bluetooth_discoverable"
+            android:summary="Makes the device discoverable"
+            android:title="Pair Bluetooth device" />
         <net.mfuertes.aagw.gateway.EditSummaryPreference
             android:key="MAC_ADDRESS_KEY"
-            android:title="WLAN0 MAC Address"
-            />
-        <CheckBoxPreference
-            android:key="SELF_EXT_KEY"
-            android:title="Use external HotSpot"
-            android:defaultValue="true"
-            android:summary="Connect to external Wifi AP"
-            />
-        <net.mfuertes.aagw.gateway.EditSummaryPreference
-            android:key="SSID_KEY"
-            android:title="SSID"
-            android:dependency="SELF_EXT_KEY"
-            />
-        <net.mfuertes.aagw.gateway.EditSummaryPreference
-            android:key="PSK_KEY"
-            android:title="PSK"
-            android:dependency="SELF_EXT_KEY"
-            />
-        <net.mfuertes.aagw.gateway.EditSummaryPreference
-            android:key="BSSID_KEY"
-            android:title="BSSID"
-            android:dependency="SELF_EXT_KEY"
-            />
+            android:title="Device MAC Address" />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -42,13 +37,13 @@
         android:title="Permissions">
         <Preference
             android:key="bluetooth_permissions"
-            android:title="Request Bluetooth Permissions"
-            android:summary="Required for Native Android Auto Flow"/>
+            android:summary="Required for Native Android Auto Flow"
+            android:title="Request Bluetooth Permissions" />
 
         <Preference
             android:key="location_permissions"
-            android:title="Request Location Permissions"
-            android:summary="Required to bring up HotSpot"/>
+            android:summary="Required to bring up HotSpot"
+            android:title="Request Location Permissions" />
     </PreferenceCategory>
 
 

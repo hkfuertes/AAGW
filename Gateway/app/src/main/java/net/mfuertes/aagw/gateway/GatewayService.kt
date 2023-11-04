@@ -34,7 +34,6 @@ class GatewayService : Service() {
         private const val DEFAULT_HANDSHAKE_TIMEOUT = 15
         private const val DEFAULT_CONNECTION_TIMEOUT = 60 // 1min
 
-        const val SERVER_MODE_KEY = "SERVER_MODE_KEY"
         const val SELF_EXT_KEY = "SELF_EXT_KEY"
         const val MAC_ADDRESS_KEY = "MAC_ADDRESS_KEY"
         const val SSID_KEY = "SSID_KEY"
@@ -62,15 +61,17 @@ class GatewayService : Service() {
     private val mMainHandlerThread = MainHandlerThread()
 
     private val mUsbManager: UsbManager by lazy { getSystemService(UsbManager::class.java) }
-    private val mBluetoothProfileHandler: BluetoothProfileHandler by lazy { BluetoothProfileHandler(this) }
+    private val mBluetoothProfileHandler: BluetoothProfileHandler by lazy {
+        BluetoothProfileHandler(
+            this
+        )
+    }
 
-    private var mServerMode = false
     private var mSelfAP = false
     private var mSsid: String? = null
     private var mPsk: String? = null
     private var mBssid: String? = null
     private var mMacAddress: String? = null
-
 
 
     override fun onCreate() {
@@ -118,29 +119,29 @@ class GatewayService : Service() {
         }
 
         // Recover it from preferences!
-        mServerMode = intent?.getBooleanExtra(SERVER_MODE_KEY, false) == true
         mSelfAP = intent?.getBooleanExtra(SELF_EXT_KEY, false) == false
         mMacAddress = intent?.getStringExtra(MAC_ADDRESS_KEY)
         mSsid = intent?.getStringExtra(SSID_KEY)
         mBssid = intent?.getStringExtra(BSSID_KEY)
         mPsk = intent?.getStringExtra(PSK_KEY)
 
-        if(mServerMode){
-            WifiHelper.registerService(this, 5288)
 
-            if(mSelfAP){
-                WifiHelper.startAp(this, mMacAddress!!) { wifiHotspotInfo ->
-                    if (wifiHotspotInfo != null) {
-                        mStartService(wifiHotspotInfo)
-                    }
+        WifiHelper.registerService(this, 5288)
+
+        if (mSelfAP) {
+            WifiHelper.startAp(this, mMacAddress!!) { wifiHotspotInfo ->
+                if (wifiHotspotInfo != null) {
+                    mStartService(wifiHotspotInfo)
                 }
-            }else{
-                mStartService(
-                    WifiHelper.WifiHotspotInfo(
-                    null, mSsid!!, mPsk!!, mBssid!!, WifiHelper.getIPAddress()!!
-                ))
             }
+        } else {
+            mStartService(
+                WifiHelper.WifiHotspotInfo(
+                    null, mSsid!!, mPsk!!, mBssid!!, WifiHelper.getIPAddress()!!
+                )
+            )
         }
+
 
         //Manually start AA.
         mRunning = true
@@ -152,26 +153,30 @@ class GatewayService : Service() {
         return START_REDELIVER_INTENT
     }
 
-    private fun mStartService(wifiHotspotInfo: WifiHelper.WifiHotspotInfo){
+    private fun mStartService(wifiHotspotInfo: WifiHelper.WifiHotspotInfo) {
         Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
 
         /**
          * Permissions:
          * - android.permission.BLUETOOTH_CONNECT
          */
-        if(
+        if (
             checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
             && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-        ){
+        ) {
             Log.e(LOG_TAG, "Permission BLUETOOTH_CONNECT not granted")
             stopService()
             return
         }
         val pairedDevices: Set<BluetoothDevice> = BluetoothAdapter.getDefaultAdapter().bondedDevices
 
-        for(device in pairedDevices){
+        for (device in pairedDevices) {
             //Start Native Flow
-            mBluetoothProfileHandler.connectDevice(device, DEFAULT_HANDSHAKE_TIMEOUT * 1000L, wifiHotspotInfo!!){
+            mBluetoothProfileHandler.connectDevice(
+                device,
+                DEFAULT_HANDSHAKE_TIMEOUT * 1000L,
+                wifiHotspotInfo!!
+            ) {
                 Log.d("NATIVE_FLOW", "Bluetooth: $it")
             }
         }
@@ -263,12 +268,6 @@ class GatewayService : Service() {
                     val fd = it.fileDescriptor
                     mPhoneInputStream = FileInputStream(fd)
                     mPhoneOutputStream = FileOutputStream(fd)
-
-                    // Fake HandShake?
-                    if(!mServerMode && false){
-                        mPhoneInputStream!!.read(ByteArray(16384))
-                        mPhoneOutputStream!!.write(byteArrayOf(0, 3, 0, 8, 0, 2, 0, 1, 0, 4, 0, 0))
-                    }
                 }
 
                 if (mUsbFileDescriptor == null || mPhoneInputStream == null || mPhoneOutputStream == null) {
@@ -344,58 +343,27 @@ class GatewayService : Service() {
             super.run()
 
             try {
-                if(mServerMode){
-                    mServerSocket = ServerSocket(5288, 5).apply {
-                        soTimeout = mClientConnectionTimeout * 1000
-                        reuseAddress = true
-                    }
 
-                    mServerSocket?.let {
-                        mSocket = it.accept().apply {
-                            soTimeout = 10000
-                        }
-                    }
+                mServerSocket = ServerSocket(5288, 5).apply {
+                    soTimeout = mClientConnectionTimeout * 1000
+                    reuseAddress = true
+                }
 
-                    mServerSocket?.runCatching {
-                        close()
-                    }
-                    mServerSocket = null
-                }else{
-                    var addressInt: Int
-                    var address: String
-
-                    do {
-                        addressInt = getSystemService(WifiManager::class.java).dhcpInfo.gateway
-                        address = "%d.%d.%d.%d".format(
-                            null,
-                            addressInt and 0xff,
-                            addressInt shr 8 and 0xff,
-                            addressInt shr 16 and 0xff,
-                            addressInt shr 24 and 0xff
-                        )
-                        sleep(100)
-                        Log.d(LOG_TAG, address)
-                    } while (address == "0.0.0.0" && isRunning())
-
-                    // If we got an interrupt (is not running) we end the thread...
-                    if(!isRunning()) return;
-
-                    Log.d(LOG_TAG, address)
-                    mSocket = Socket().apply {
-                        connect(InetSocketAddress(address, 5277), mClientConnectionTimeout * 1000)
+                mServerSocket?.let {
+                    mSocket = it.accept().apply {
+                        soTimeout = 10000
                     }
                 }
+
+                mServerSocket?.runCatching {
+                    close()
+                }
+                mServerSocket = null
+
 
                 mSocket?.also {
                     mSocketOutputStream = it.getOutputStream()
                     mSocketInputStream = DataInputStream(it.getInputStream())
-
-                    //Fake Handshake?
-                    if(!mServerMode && false){
-                         mSocketOutputStream!!.write(byteArrayOf(0, 3, 0, 6, 0, 1, 0, 1, 0, 2))
-                         mSocketOutputStream!!.flush()
-                         mSocketInputStream!!.read(ByteArray(12))
-                    }
                 }
 
                 Log.i(LOG_TAG, "TCP connected")

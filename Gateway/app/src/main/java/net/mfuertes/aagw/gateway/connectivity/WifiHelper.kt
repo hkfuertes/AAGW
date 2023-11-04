@@ -1,17 +1,19 @@
 package net.mfuertes.aagw.gateway.connectivity
 
 import WifiInfoRequestOuterClass
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
+import android.system.Os
 import android.util.Log
-import com.lordcodes.turtle.shellRun
 import java.io.File
-import java.lang.RuntimeException
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.Collections
@@ -81,7 +83,7 @@ object WifiHelper {
                             reservation,
                             reservation.softApConfiguration.ssid!!,
                             reservation.softApConfiguration.passphrase!!,
-                            bssid,
+                            (reservation.softApConfiguration.bssid ?: bssid).toString(),
                             getIPAddress(true)!!
                         )
                         callback(wifiHotspotInfo)
@@ -128,24 +130,6 @@ object WifiHelper {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-        }
-    }
-
-    /**
-     * Needs privileged!
-     */
-    fun getMacAddress(iface: String): String? {
-        try {
-            val cmd = "ip -o link".split(" ")
-            shellRun(cmd.first(), cmd.subList(1, cmd.size)).also { output ->
-                val filtered = output.split("\n").filter { it.contains(iface) }
-                if (filtered.isEmpty()) return null
-                return filtered.first().split("link/ether")
-                    .last().trim().split(" ").first()
-            }
-        }catch(ex: Exception){
-            ex.printStackTrace()
-            return null
         }
     }
 

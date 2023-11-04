@@ -2,10 +2,7 @@ package net.mfuertes.aagw.gateway
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Intent
-import android.content.SharedPreferences
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.pm.PackageManager
 import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbManager
@@ -13,25 +10,15 @@ import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceActivity
 import android.preference.PreferenceManager
-import android.util.Log
-import net.mfuertes.aagw.gateway.connectivity.WifiHelper
+import net.mfuertes.aagw.gateway.connectivity.PairingReceiver
+
 
 @SuppressLint("ExportedPreferenceActivity")
-class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListener {
-    companion object {
-        const val NAME = "GATEWAY"
-    }
+class USBReceiverActivity : PreferenceActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         addPreferencesFromResource(R.xml.preferences)
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-
-        // Setting default device MacAddress if found...
-        WifiHelper.getMacAddress("wlan0")?.let {
-            Log.d("MAC_ADDRESS", it)
-            prefs.edit().putString(GatewayService.MAC_ADDRESS_KEY, it).commit()
-        }
 
         findPreference("bluetooth_permissions")?.apply {
             isEnabled = (
@@ -71,14 +58,25 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
             }
         }
 
-        findPreference("MAC_ADDRESS_KEY")?.apply {
-            setEnabled(WifiHelper.getMacAddress("wlan0") == null)
+        findPreference("bluetooth_discoverable")?.apply {
+            setOnPreferenceClickListener{
+                PairingReceiver.enableDiscoverable(this@USBReceiverActivity)
+                true
+            }
         }
 
     }
 
     override fun onResume() {
         super.onResume()
+
+        // am start -n net.mfuertes.aagw.gateway/.USBReceiverActivity --es MAC_ADDRESS <MAC>
+        intent.getStringExtra("MAC_ADDRESS")?.let {
+            PreferenceManager.getDefaultSharedPreferences(this).edit().apply{
+                putString(GatewayService.MAC_ADDRESS_KEY, it).apply()
+            }
+            finish()
+        }
 
         if (intent.action?.equals(UsbManager.ACTION_USB_ACCESSORY_ATTACHED) == true) {
             val accessory = intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY) as UsbAccessory?
@@ -96,10 +94,6 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
     private fun fillIntent(intent: Intent): Intent {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
         intent.putExtra(
-            GatewayService.SERVER_MODE_KEY,
-            sharedPref.getBoolean(GatewayService.SERVER_MODE_KEY, false)
-        )
-        intent.putExtra(
             GatewayService.SELF_EXT_KEY,
             sharedPref.getBoolean(GatewayService.SELF_EXT_KEY, false)
         )
@@ -114,7 +108,7 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
         )
         intent.putExtra(
             GatewayService.MAC_ADDRESS_KEY,
-            sharedPref.getString(GatewayService.MAC_ADDRESS_KEY, WifiHelper.getMacAddress("wlan0"))
+            sharedPref.getString(GatewayService.MAC_ADDRESS_KEY, null)
         )
         return intent
     }
@@ -131,10 +125,6 @@ class USBReceiverActivity : PreferenceActivity(), OnSharedPreferenceChangeListen
 
     private fun isPermissionAccepted(permissions: List<String>): Boolean {
         return permissions.all { applicationContext.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
-    }
-
-    override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
-        TODO("Not yet implemented")
     }
 
 }
