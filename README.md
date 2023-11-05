@@ -67,7 +67,7 @@ void loop(){}
 
 ## Tested on:
 - **OnePlus X, _running LineageOS 18.1 (Android 11)_**: working in all modes.
-  - The `LocalOnlyHotSpot` uses `wlan0` MAC as BSSID. It can be automatically detected if app is in `priv-app` and if wifi is enabled.
+  - The `LocalOnlyHotSpot` uses `wlan0` MAC as BSSID.
 
 # Credit where credit is due..
 - Big thanks to **[nisargjhaveri](https://github.com/nisargjhaveri/AAWirelessGateway)** for almost all the code, this is a minor refactor of his work with a minimal `LocalOnlyHotSpot` & usb gadget restart addition.
