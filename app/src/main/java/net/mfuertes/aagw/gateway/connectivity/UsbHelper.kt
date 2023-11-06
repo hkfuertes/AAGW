@@ -1,5 +1,8 @@
 package net.mfuertes.aagw.gateway.connectivity
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.hardware.usb.UsbManager
 import android.os.Build
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -35,15 +38,22 @@ object UsbHelper {
             HiddenApiBypass.invoke(UsbManager::class.java, usbManager, "setCurrentFunctions", function)
     }
     @JvmStatic
-    fun setMode(usbManager: UsbManager, function: Long){
+    fun setMode(usbManager: UsbManager, function: Long, reset: Boolean = false){
         thread {
             try{
+                if(reset) setCurrentFunctions(usbManager, FUNCTION_ADB)
                 if(getCurrentFunctions(usbManager) != function){
                     setCurrentFunctions(usbManager, function)
                 }
             }catch (ex: Exception){
                 ex.printStackTrace()
             }
+        }
+    }
+
+    class BootCompletedReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            setMode(context.getSystemService(UsbManager::class.java), FUNCTION_MTP)
         }
     }
 }
