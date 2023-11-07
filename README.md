@@ -10,7 +10,7 @@ You will need to pair the two devices toghether first, as upon car detected, the
 If using a TV box (FireStick in my case), the Bluetooth settings panel may filter out anything NOT a controller/headset. Use third party apps, I used this one: https://play.google.com/store/apps/details?id=com.zdworksinc.bluetoothtvscanner
 
 ### HotSpot
-The only parameter I was not able to get automatically was the BSSID/MAC of the interface that will serve the Wifi hotspot, so it has to be setup manually.To do so you would require another computer, here are the steps for linux, but for other systems google how to get the BSSID of a wifi network:
+The only parameter I was not able to get automatically was the BSSID/MAC of the interface that will serve the Wifi hotspot, so it has to be setup manually. To do so you would require another computer, here are the steps for linux, but for other systems google how to get the BSSID of a wifi network:
 1. Start the hotspot from the app. A dialog will appear with the name of the wifi network something like `DIRECT-...`
 2. On a Linux pc run the command `sudo iwlist scanning` and search for the wifi network, in this example the _**BSSID**_ is: `BA:73:9C:75:2B:62`
    ```
