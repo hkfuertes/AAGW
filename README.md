@@ -44,5 +44,5 @@ adb shell chmod 0644 /system/etc/permissions/privapp-permissions-net.mfuertes.aa
 - **FireStickTV Lite (Sheldon),  _running LineageOS 18.1 (Android 11)_**
 
 # Credit where credit is due..
-- Big thanks to **[nisargjhaveri](https://github.com/nisargjhaveri/AAWirelessGateway)** for almost all the code, this is a minor refactor of his work with a minimal `LocalOnlyHotSpot` & usb gadget restart addition.
+- Big thanks to **[nisargjhaveri](https://github.com/nisargjhaveri/AAWirelessGateway)** for almost all the code, this is a minor refactor of his work with a minimal P2P AP & USB gadget restart addition.
 - Thank you also to **[north3221](https://github.com/north3221/AAGateWayWiFi)** for the idea of restarting mtp (usb gadget). I have done it with the Android hidden API (so that root is not required, only system app) but the idea is the same.
