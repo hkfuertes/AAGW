@@ -50,6 +50,7 @@ adb shell chmod 0644 /system/etc/permissions/privapp-permissions-net.mfuertes.aa
 ## Tested on:
 - **OnePlus X, _running LineageOS 18.1 (Android 11)_**
 - **FireStickTV Lite (Sheldon),  _running LineageOS 18.1 (Android 11)_**
+- **Pixel 2XL,  _running LineageOS 20 (Android 13)_**
 
 # Credit where credit is due..
 - Big thanks to **[nisargjhaveri](https://github.com/nisargjhaveri/AAWirelessGateway)** for almost all the code, this is a minor refactor of his work with a minimal P2P AP & USB gadget restart addition.
