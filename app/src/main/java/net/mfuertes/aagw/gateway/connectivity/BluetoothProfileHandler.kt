@@ -3,6 +3,7 @@ package net.mfuertes.aagw.gateway.connectivity
 import WifiInfoRequestOuterClass
 import WifiStartRequestOuterClass
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.Context
 import android.content.pm.PackageManager
@@ -17,6 +18,15 @@ class BluetoothProfileHandler (context: Context) {
         private const val LOG_TAG = "AAService"
         private val A2DP_SOURCE_UUID = UUID.fromString("00001112-0000-1000-8000-00805F9B34FB")
         private val AA_LISTENER_UUID = UUID.fromString("4de17a00-52cb-11e6-bdf4-0800200c9a66")
+
+        /**
+         * Permissions:
+         * - android.permission.BLUETOOTH_CONNECT
+         */
+        @SuppressLint("MissingPermission")
+        fun getBondedDevices(): Set<BluetoothDevice> {
+            return BluetoothAdapter.getDefaultAdapter().bondedDevices
+        }
     }
 
     private val mContext = context
@@ -24,7 +34,7 @@ class BluetoothProfileHandler (context: Context) {
     private var mBluetoothAdapter: BluetoothAdapter? = null
 
     private lateinit var mWifiHotspotInfo: WifiHelper.WifiHotspotInfo
-    private lateinit var mCallback: (Boolean) -> Unit
+    private var mCallback: ((Boolean) -> Unit)? = null
 
     private var mConnectThread: AAConnectThread? = null
 
@@ -38,7 +48,7 @@ class BluetoothProfileHandler (context: Context) {
         Log.d(LOG_TAG, "AA Bluetooth: $message")
     }
 
-    fun connectDevice(device: BluetoothDevice, timeout: Long, wifiHotspotInfo: WifiHelper.WifiHotspotInfo, callback: (Boolean) -> Unit) {
+    fun connectDevice(device: BluetoothDevice, timeout: Long, wifiHotspotInfo: WifiHelper.WifiHotspotInfo, callback: ((Boolean) -> Unit)? = null) {
         mWifiHotspotInfo = wifiHotspotInfo
         mCallback = callback
 
@@ -151,7 +161,7 @@ class BluetoothProfileHandler (context: Context) {
                     log("BT Connection failed")
                 }
 
-                mCallback.invoke(connected)
+                mCallback?.invoke(connected)
             }
         }
 

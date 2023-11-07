@@ -1,13 +1,26 @@
 # Android Auto Wirelesss Gateway
 Complete solution for using an old phone as a Android Auto Wireless Dongle.
 
-## Operation Modes
-It will go through bonded Bluetooth devices trying to initiate Native Android Auto connection. Two modes can be used, internal `LocalOnlyHotSpot` or external AP.
-  - Internal AP _a.k.a. `LocalOnlyHotSpot`_:
-    - The `BSSID` is the main attribute needed for Android Auto to connect. _On tested device LOHS will use WLAN0 MAC address as BSSID._
-  - External AP:
-    - Gateway has to be connected to this AP, even when no internet is detected (see below).
-    - `SSID, PSK, BSSID` have to be specified. Again BSSID is the main attribute for Android Auto to connect.
+## Configuration
+The only parameter I was not able to get automatically was the BSSID/MAC of the interface that will serve the Wifi hotspot, so it has to be setup manually.To do so you would require another computer, here are the steps for linux, but for other systems google how to get the BSSID of a wifi network:
+1. Start the hotspot from the app. A dialog will appear with the name of the wifi network something like `DIRECT-...`
+2. On a Linux pc run the command `sudo iwlist scanning` and search for the wifi network, in this example the _**BSSID**_ is: `BA:73:9C:75:2B:62`
+   ```
+   Cell 11 - Address: BA:73:9C:75:2B:62
+                   Channel:1
+                   Frequency:2.412 GHz (Channel 1)
+                   Quality=70/70  Signal level=-37 dBm  
+                   Encryption key:on
+                   ESSID:"DIRECT-V6-Android_bb59"
+                   Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s
+                             36 Mb/s; 48 Mb/s; 54 Mb/s
+   ...
+   ```
+3. Enter the `BSSID` in the field called _**P2P0 MAC Address (BSSID)**_, Alternatively you can enter this data from the `adb shell`:
+
+      ```shell
+      adb shell 'am start -n net.mfuertes.aagw.gateway/.USBReceiverActivity --es MAC_ADDRESS <MAC>'
+      ``` 
 
 ## Installing as `priv-app`
 If the app is installed as system app `priv-app` it gains additional features, such us USB auto accept for Android Auto or restart MTP on failure.
@@ -25,49 +38,10 @@ adb shell chmod 0644 /system/priv-app/net.mfuertes.aagw.gateway/base.apk
 adb shell cp /sdcard/privapp-permissions-net.mfuertes.aagw.gateway.xml /system/etc/permissions/
 adb shell chmod 0644 /system/etc/permissions/privapp-permissions-net.mfuertes.aagw.gateway.xml
 ```
-## Configuring the MAC_ADDRESS from `adb shell`
-If the main activity is started with an extra string `MAC_ADDRESS`, the mac address field will be updated:
-```shell
-# Get the WLAN0 mac address with
-adb shell 'ip -o link | grep wlan0' #... or by any other mean ...
-adb shell 'am start -n net.mfuertes.aagw.gateway/.USBReceiverActivity --es MAC_ADDRESS <MAC>'
-```
-
-## Allow _no internet_ connection
-Android will ping Google servers to check if the connection has internet. If the connection has no internet it will prompt or not connect. With this commands, google wont ask, it will connect.
-```shell
-adb shell 'settings put global captive_portal_detection_enabled 0'
-adb shell 'settings put global captive_portal_mode 0'
-```
-
-## ESP32 SoftAP sketch
-If for some reason your device doesnt support Tethering, you can use this sketch to program a cheap ESP device to act as an access point _(...like the ones used to 'hack' the PS4)_:
-```c++
-#include <WiFi.h>
-#include "esp_wifi.h"
-
-const char* ssid           = "AndroidAuto";   // SSID Name
-const char* password       = "1234567890";    // SSID Password - Set to NULL to have an open AP
-const int   channel        = 10;              // WiFi Channel number between 1 and 13
-const bool  hide_SSID      = false;           // To disable SSID broadcast -> SSID will not appear in a basic WiFi scan
-const int   max_connection = 2;               // Maximum simultaneous connected clients on the AP
-
-void setup()
-{
-    Serial.begin(115200);
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(ssid, password, channel, hide_SSID, max_connection);
-    Serial.print("[+] AP Created with IP Gateway ");
-    Serial.println(WiFi.softAPIP());
-    Serial.printf("[+] MAC address = %s\n", WiFi.softAPmacAddress().c_str());
-}
-
-void loop(){}
-```
 
 ## Tested on:
-- **OnePlus X, _running LineageOS 18.1 (Android 11)_**: working in all modes.
-  - The `LocalOnlyHotSpot` uses `wlan0` MAC as BSSID.
+- **OnePlus X, _running LineageOS 18.1 (Android 11)_**
+- **FireStickTV Lite (Sheldon),  _running LineageOS 18.1 (Android 11)_**
 
 # Credit where credit is due..
 - Big thanks to **[nisargjhaveri](https://github.com/nisargjhaveri/AAWirelessGateway)** for almost all the code, this is a minor refactor of his work with a minimal `LocalOnlyHotSpot` & usb gadget restart addition.

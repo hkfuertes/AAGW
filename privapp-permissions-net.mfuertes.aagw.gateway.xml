@@ -18,5 +18,6 @@
         <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
         <permission name="android.permission.ACCESS_FINE_LOCATION" />
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
+        <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </privapp-permissions>
 </permissions>

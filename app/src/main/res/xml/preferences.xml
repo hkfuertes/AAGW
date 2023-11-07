@@ -1,27 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="SELF_EXT_KEY"
-        android:summary="Connect to external Wifi AP"
-        android:title="Use external HotSpot" />
-    <net.mfuertes.aagw.gateway.EditSummaryPreference
-        android:dependency="SELF_EXT_KEY"
-        android:key="SSID_KEY"
-        android:title="SSID" />
-    <net.mfuertes.aagw.gateway.EditSummaryPreference
-        android:dependency="SELF_EXT_KEY"
-        android:key="PSK_KEY"
-        android:title="PSK" />
-    <net.mfuertes.aagw.gateway.EditSummaryPreference
-        android:dependency="SELF_EXT_KEY"
-        android:key="BSSID_KEY"
-        android:title="BSSID" />
+    <PreferenceCategory
+        android:key="settings"
+        android:title="Settings">
+        <Preference
+            android:key="start_stop_ap"
+            android:summary="Use another PC to get the BSSID"
+            android:title="Start HotSpot" />
     <net.mfuertes.aagw.gateway.EditSummaryPreference
         android:key="MAC_ADDRESS_KEY"
-        android:title="Device MAC Address" />
+        android:title="P2P0 MAC Address (BSSID)" />
+    </PreferenceCategory>
     <PreferenceCategory
-        android:key="server_mode_config"
+        android:key="permissions"
         android:title="Permissions">
         <Preference
             android:key="bluetooth_permissions"

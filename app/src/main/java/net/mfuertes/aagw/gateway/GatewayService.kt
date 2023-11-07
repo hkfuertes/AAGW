@@ -1,17 +1,12 @@
 package net.mfuertes.aagw.gateway
 
-import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.hardware.usb.UsbAccessory
 import android.hardware.usb.UsbManager
-import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -34,11 +29,7 @@ class GatewayService : Service() {
         private const val DEFAULT_HANDSHAKE_TIMEOUT = 15
         private const val DEFAULT_CONNECTION_TIMEOUT = 60 // 1min
 
-        const val SELF_EXT_KEY = "SELF_EXT_KEY"
         const val MAC_ADDRESS_KEY = "MAC_ADDRESS_KEY"
-        const val SSID_KEY = "SSID_KEY"
-        const val PSK_KEY = "PSK_KEY"
-        const val BSSID_KEY = "BSSID_KEY"
     }
 
     private var mLogCommunication = false
@@ -66,13 +57,7 @@ class GatewayService : Service() {
             this
         )
     }
-
-    private var mSelfAP = false
-    private var mSsid: String? = null
-    private var mPsk: String? = null
-    private var mBssid: String? = null
     private var mMacAddress: String? = null
-
 
     override fun onCreate() {
         super.onCreate()
@@ -118,68 +103,32 @@ class GatewayService : Service() {
             return START_REDELIVER_INTENT
         }
 
-        // Recover it from preferences!
-        mSelfAP = intent?.getBooleanExtra(SELF_EXT_KEY, false) == false
         mMacAddress = intent?.getStringExtra(MAC_ADDRESS_KEY)
-        mSsid = intent?.getStringExtra(SSID_KEY)
-        mBssid = intent?.getStringExtra(BSSID_KEY)
-        mPsk = intent?.getStringExtra(PSK_KEY)
-
-
-        WifiHelper.registerService(this, 5288)
-
-        if (mSelfAP) {
-            WifiHelper.startAp(this, mMacAddress!!) { wifiHotspotInfo ->
-                if (wifiHotspotInfo != null) {
-                    mStartService(wifiHotspotInfo)
-                }
-            }
-        } else {
-            mStartService(
-                WifiHelper.WifiHotspotInfo(
-                    null, mSsid!!, mPsk!!, mBssid!!, WifiHelper.getIPAddress()!!
-                )
-            )
+        if (mMacAddress == null) {
+            Log.e(LOG_TAG, "No MAC Address found")
+            stopService()
+            return START_REDELIVER_INTENT
         }
 
+        WifiHelper.startP2pAp(this, mMacAddress!!) { wifiHotspotInfo ->
+            Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
 
-        //Manually start AA.
-        mRunning = true
-        mUsbComplete = false
-        mLocalComplete = false
+            val pairedDevices = BluetoothProfileHandler.getBondedDevices()
 
-        mMainHandlerThread.start()
+            for (device in pairedDevices) {
+                mBluetoothProfileHandler.connectDevice(device,
+                    DEFAULT_HANDSHAKE_TIMEOUT * 1000L,
+                    wifiHotspotInfo!!)
+            }
+            //Manually start AA.
+            mRunning = true
+            mUsbComplete = false
+            mLocalComplete = false
+
+            mMainHandlerThread.start()
+        }
 
         return START_REDELIVER_INTENT
-    }
-
-    private fun mStartService(wifiHotspotInfo: WifiHelper.WifiHotspotInfo) {
-        Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
-
-        /**
-         * Permissions:
-         * - android.permission.BLUETOOTH_CONNECT
-         */
-        if (
-            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
-            && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-        ) {
-            Log.e(LOG_TAG, "Permission BLUETOOTH_CONNECT not granted")
-            stopService()
-            return
-        }
-        val pairedDevices: Set<BluetoothDevice> = BluetoothAdapter.getDefaultAdapter().bondedDevices
-
-        for (device in pairedDevices) {
-            //Start Native Flow
-            mBluetoothProfileHandler.connectDevice(
-                device,
-                DEFAULT_HANDSHAKE_TIMEOUT * 1000L,
-                wifiHotspotInfo!!
-            ) {
-                Log.d("NATIVE_FLOW", "Bluetooth: $it")
-            }
-        }
     }
 
     private fun onMainHandlerThreadStopped() {
@@ -187,7 +136,7 @@ class GatewayService : Service() {
     }
 
     private fun stopService() {
-        WifiHelper.unRegisterService(this)
+        WifiHelper.stopP2pAp(this)
         UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
         stopForeground(true)
         stopSelf()
