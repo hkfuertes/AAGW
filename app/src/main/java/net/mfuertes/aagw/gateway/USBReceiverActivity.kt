@@ -21,13 +21,18 @@ class USBReceiverActivity : PreferenceActivity() {
         super.onCreate(savedInstanceState)
         addPreferencesFromResource(R.xml.preferences)
 
+        findPreference("bluetooth_permissions")?.let {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+                it.parent?.apply { removePreference(it) }
+        }
+
         findPreference("start_stop_ap")?.apply {
             setOnPreferenceClickListener {
-                WifiHelper.startP2pAp(this@USBReceiverActivity, null){
+                WifiHelper.startP2pAp(this@USBReceiverActivity, null) {
                     AlertDialog.Builder(this@USBReceiverActivity)
-                        .setTitle("HotSpot Started")
+                        .setTitle("HotSpot")
                         .setMessage("Network name: ${it.ssid}\nPassword: ${it.psk}")
-                        .setNegativeButton("Stop"){ _, _ ->
+                        .setNegativeButton("Stop") { _, _ ->
                             WifiHelper.stopP2pAp(this@USBReceiverActivity)
                         }
                         .setOnDismissListener {
@@ -40,14 +45,7 @@ class USBReceiverActivity : PreferenceActivity() {
         }
 
         findPreference("bluetooth_permissions")?.apply {
-            isEnabled = (
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                            && !isPermissionAccepted(
-                        arrayOf(
-                            Manifest.permission.BLUETOOTH_CONNECT
-                        ).asList()
-                    )
-                    )
+            isEnabled = (!isPermissionAccepted(arrayOf(Manifest.permission.BLUETOOTH_CONNECT).asList()))
             setOnPreferenceClickListener {
                 checkPermission(
                     arrayOf(
@@ -78,6 +76,15 @@ class USBReceiverActivity : PreferenceActivity() {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        finish()
+    }
+
     override fun onResume() {
         super.onResume()
 
@@ -85,7 +92,7 @@ class USBReceiverActivity : PreferenceActivity() {
 
         // am start -n net.mfuertes.aagw.gateway/.USBReceiverActivity --es MAC_ADDRESS <MAC>
         intent.getStringExtra("MAC_ADDRESS")?.let {
-            PreferenceManager.getDefaultSharedPreferences(this).edit().apply{
+            PreferenceManager.getDefaultSharedPreferences(this).edit().apply {
                 putString(GatewayService.MAC_ADDRESS_KEY, it).apply()
             }
             finish()

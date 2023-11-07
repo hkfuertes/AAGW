@@ -9,102 +9,13 @@ import android.content.IntentFilter
 import android.net.NetworkInfo
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
-import android.net.wifi.WifiManager
 import android.net.wifi.p2p.WifiP2pManager
 import android.net.wifi.p2p.WifiP2pManager.ActionListener
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener
-import android.os.Build
-import android.os.Handler
 import android.os.Looper.getMainLooper
 import android.util.Log
-import java.net.InetAddress
-import java.net.NetworkInterface
-import java.util.Collections
-import java.util.Locale
-
 
 object WifiHelper {
-    /**
-     * Get IP address from first non-localhost interface
-     * @param useIPv4   true=return ipv4, false=return ipv6
-     * @return  address or empty string
-     */
-    fun getIPAddress(useIPv4: Boolean = true): String? {
-        try {
-            val interfaces: List<NetworkInterface> =
-                Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (intf in interfaces) {
-                val addrs: List<InetAddress> = Collections.list(intf.inetAddresses)
-                for (addr in addrs) {
-                    if (!addr.isLoopbackAddress) {
-                        val sAddr = addr.hostAddress
-                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
-                        val isIPv4 = sAddr.indexOf(':') < 0
-                        if (useIPv4) {
-                            if (isIPv4) return sAddr
-                        } else {
-                            if (!isIPv4) {
-                                val delim = sAddr.indexOf('%') // drop ip6 zone suffix
-                                return if (delim < 0) sAddr.uppercase(Locale.getDefault()) else sAddr.substring(
-                                    0,
-                                    delim
-                                ).uppercase(
-                                    Locale.getDefault()
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (ignored: java.lang.Exception) {
-        } // for now eat exceptions
-        return ""
-    }
-
-    /**
-     * Start LocalOnlyHotSpot
-     * Permission:
-     * - android.permission.CHANGE_WIFI_STATE
-     * - android.permission.ACCESS_FINE_LOCATION
-     */
-    @SuppressLint("MissingPermission")
-    fun startAp(
-        context: Context,
-        bssid: String,
-        callback: (wifiHotspotInfo: WifiHotspotInfo?) -> Unit
-    ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
-
-            wifiManager.startLocalOnlyHotspot(
-                object : WifiManager.LocalOnlyHotspotCallback() {
-
-                    override fun onStarted(reservation: WifiManager.LocalOnlyHotspotReservation) {
-                        super.onStarted(reservation)
-
-                        val wifiHotspotInfo = WifiHotspotInfo(
-                            reservation,
-                            reservation.softApConfiguration.ssid!!,
-                            reservation.softApConfiguration.passphrase!!,
-                            (reservation.softApConfiguration.bssid ?: bssid).toString(),
-                            getIPAddress(true)!!
-                        )
-                        callback(wifiHotspotInfo)
-                    }
-
-                    override fun onStopped() {
-                        super.onStopped()
-                        callback(null)
-                    }
-
-                    override fun onFailed(reason: Int) {
-                        super.onFailed(reason)
-                        callback(null)
-                    }
-                }, Handler()
-            )
-        }
-    }
 
     private val channelListener = ChannelListener { TODO("Not yet implemented") }
 
@@ -127,7 +38,6 @@ object WifiHelper {
                                 manager.requestConnectionInfo(channel) {info ->
                                     if(info?.groupOwnerAddress != null){
                                         val wifiHotspotInfo = WifiHotspotInfo(
-                                            null,
                                             group.networkName,
                                             group.passphrase,
                                             mac, //sudo iwlist scanning on linux!
@@ -161,6 +71,7 @@ object WifiHelper {
 
             override fun onFailure(error: Int) {
                 Log.d("WIFI_P2P", "Error: $error")
+                context.unregisterReceiver(receiver)
                 startP2pAp(context, mac, callback)
             }
 
@@ -207,7 +118,6 @@ object WifiHelper {
 
 
     data class WifiHotspotInfo(
-        val reservation: WifiManager.LocalOnlyHotspotReservation?,
         val ssid: String,
         val psk: String,
         val bssid: String?,
