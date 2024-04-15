@@ -52,7 +52,7 @@ adb shell chmod 0644 /system/priv-app/net.mfuertes.aagw.gateway/base.apk
 adb shell cp /sdcard/privapp-permissions-net.mfuertes.aagw.gateway.xml /system/etc/permissions/
 adb shell chmod 0644 /system/etc/permissions/privapp-permissions-net.mfuertes.aagw.gateway.xml
 ```
-> This MTP restart is useful if the device does not have baterry, and re-plug means restart, ie: TV Sticks...
+> This MTP restart is useful if the device does not have battery, and re-plug means restart, ie: TV Sticks...
 
 ## Tested on:
 - **OnePlus X, _running LineageOS 18.1 (Android 11)_**
