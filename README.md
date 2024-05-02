@@ -37,21 +37,7 @@ Once everything is setup, just plug the device onto the car and wait for Android
 **How does it work?** Once the USB is detected, it will try to initiate the Android Auto wired connection. If Google Apps are instaled (and therefore regular Android Auto) or if it is not installed as system app, It will ask you wich application has to handle the usb device (the car), you need to manually select this app and set it as allways. Then the process will start. It will bring up the AP and will try to connect to the bonded Bluetooth devices. It will try to connect as a Bluetooth audio sink. Then the master phone will react and try to reach back to the gateway looking for the specific Service UUID to ask the wifi credentials (SSID, PSK, BSSID, IP). Once this credentials are exchanged, the bluetooth part is done, and the master phone will try to connect to that wifi, and to that ip. Then the gateway just forwards everything that comes from the network to the usb and viceversa.
 
 ## Installing as `priv-app`
-If the app is installed as system app `priv-app` it gains additional features, such us USB auto accept for Android Auto or restart MTP on failure.
-```shell
-# Install from TWRP
-adb push gateway.apk /sdcard
-adb push privapp-permissions-net.mfuertes.aagw.gateway.xml /sdcard
-
-adb shell twrp mount /system
-adb shell twrp remountrw /system
-adb shell mkdir -p /system/priv-app/net.mfuertes.aagw.gateway/
-adb shell chmod 0755 /system/priv-app/net.mfuertes.aagw.gateway
-adb shell cp /sdcard/gateway.apk /system/priv-app/net.mfuertes.aagw.gateway/base.apk
-adb shell chmod 0644 /system/priv-app/net.mfuertes.aagw.gateway/base.apk
-adb shell cp /sdcard/privapp-permissions-net.mfuertes.aagw.gateway.xml /system/etc/permissions/
-adb shell chmod 0644 /system/etc/permissions/privapp-permissions-net.mfuertes.aagw.gateway.xml
-```
+Use the `aawg-twrp.zip` to install it as System App from TWRP.
 > This MTP restart is useful if the device does not have battery, and re-plug means restart, ie: TV Sticks...
 
 ## Tested on:
@@ -62,3 +48,9 @@ adb shell chmod 0644 /system/etc/permissions/privapp-permissions-net.mfuertes.aa
 # Credit where credit is due..
 - Big thanks to **[nisargjhaveri](https://github.com/nisargjhaveri/AAWirelessGateway)** for almost all the code, this is a minor refactor of his work with a minimal P2P AP & USB gadget restart addition.
 - Thank you also to **[north3221](https://github.com/north3221/AAGateWayWiFi)** for the idea of restarting mtp (usb gadget). I have done it with the Android hidden API (so that root is not required, only system app) but the idea is the same.
+
+---
+## TODO
+- Option to reset mtp on failure/boot.
+- Option to set timeout for tcp socket.
+- Make it work on Dacia Media Display!
