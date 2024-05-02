@@ -8,5 +8,5 @@ set_perm(0, 0, 0755, "/system_root/system/priv-app/net.mfuertes.aagw.gateway");
 set_perm(0, 0, 0644, "/system_root/system/priv-app/net.mfuertes.aagw.gateway/base.apk");
 set_perm(0, 0, 0644, "/system_root/system/etc/permissions/privapp-permissions-net.mfuertes.aagw.gateway.xml");
 ui_print("[+] Unmounting System");
-# unmount("/system_root");
+unmount("/system_root");
 ui_print("[+] Done!");
