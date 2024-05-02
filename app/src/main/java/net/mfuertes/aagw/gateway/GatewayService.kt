@@ -118,7 +118,8 @@ class GatewayService : Service() {
             for (device in pairedDevices) {
                 mBluetoothProfileHandler.connectDevice(device,
                     DEFAULT_HANDSHAKE_TIMEOUT * 1000L,
-                    wifiHotspotInfo!!)
+                    wifiHotspotInfo
+                )
             }
             //Manually start AA.
             mRunning = true
@@ -137,7 +138,7 @@ class GatewayService : Service() {
 
     private fun stopService() {
         WifiHelper.stopP2pAp(this)
-        UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
+        //UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
         stopForeground(true)
         stopSelf()
     }

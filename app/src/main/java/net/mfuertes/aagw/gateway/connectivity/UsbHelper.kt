@@ -53,7 +53,7 @@ object UsbHelper {
 
     class BootCompletedReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            setMode(context.getSystemService(UsbManager::class.java), FUNCTION_MTP)
+            //setMode(context.getSystemService(UsbManager::class.java), FUNCTION_MTP)
         }
     }
 }
