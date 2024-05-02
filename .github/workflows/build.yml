@@ -20,3 +20,19 @@ jobs:
 
     - name: Build with Gradle
       run: ./gradlew assembleRelease
+    
+    - name: Create Installable ZIP
+      run: |
+        cp ./app/build/outputs/apk/release/app-release-unsigned.apk ./ZIP_INSTALL/system/priv-app/net.mfuertes.aagw.gateway/base.apk
+        zip -r aawg_twrp.zip ./ZIP_INSTALL/*
+
+    - name: Upload the artifacts
+      uses: actions/upload-artifact@v3.0.0
+      with:
+        # Artifact name
+        name: aawg-release
+        # Destination path
+        path: |
+          ./aawg_twrp.zip
+          ./app/build/outputs/apk/release/app-release-unsigned.apk
+
