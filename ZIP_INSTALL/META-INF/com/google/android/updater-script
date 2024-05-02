@@ -1,0 +1,12 @@
+ui_print("Instaling AA Gateway as System App");
+ui_print("[+] Mounting System");
+run_program("/sbin/busybox", "mount", "/system_root");
+ui_print("[+] Extracting...");
+package_extract_dir("system", "/system_root/system");
+ui_print("[+] Setting permissions");
+set_perm(0, 0, 0755, "/system_root/system/priv-app/net.mfuertes.aagw.gateway");
+set_perm(0, 0, 0644, "/system_root/system/priv-app/net.mfuertes.aagw.gateway/base.apk");
+set_perm(0, 0, 0644, "/system_root/system/etc/permissions/privapp-permissions-net.mfuertes.aagw.gateway.xml");
+ui_print("[+] Unmounting System");
+# unmount("/system_root");
+ui_print("[+] Done!");
