@@ -21,10 +21,11 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew assembleRelease
     
-    - name: Create Installable ZIP
+    - name: Prepare APK and create Installable ZIP
       run: |
-        mkdir -p ./ZIP_INSTALL/system/priv-app/net.mfuertes.aagw.gateway
-        cp ./app/build/outputs/apk/release/app-release-unsigned.apk ./ZIP_INSTALL/system/priv-app/net.mfuertes.aagw.gateway/base.apk
+        cp ./app/build/outputs/apk/release/app-release-unsigned.apk ./aawg_unsigned.apk
+        cp ./aawg_unsigned.apk ./ZIP_INSTALL/system/priv-app/net.mfuertes.aagw.gateway/base.apk
+        rm -rf ./ZIP_INSTALL/system/priv-app/net.mfuertes.aagw.gateway/.gitkeep
         cd ./ZIP_INSTALL && zip -r ../aawg_twrp.zip .
 
     - name: Upload the artifacts
@@ -35,5 +36,5 @@ jobs:
         # Destination path
         path: |
           ./aawg_twrp.zip
-          ./app/build/outputs/apk/release/app-release-unsigned.apk
+          ./aawg_unsigned.apk
 
