@@ -233,6 +233,7 @@ class GatewayService : Service() {
 
                 val buffer = ByteArray(16384)
                 while (isRunning()) {
+                    // At this point TCP is ok!
                     try {
                         val len: Int
                         try {
@@ -300,7 +301,7 @@ class GatewayService : Service() {
 
                 mServerSocket?.let {
                     mSocket = it.accept().apply {
-                        soTimeout = 10000
+                        // soTimeout = 10000
                     }
                 }
 
