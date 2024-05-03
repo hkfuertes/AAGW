@@ -52,13 +52,4 @@ object UsbHelper {
             }
         }
     }
-
-    class BootCompletedReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
-            WifiHelper.initNativeFlow(context, sharedPref.getString(GatewayService.MAC_ADDRESS_KEY, null)!!){
-                setMode(context.getSystemService(UsbManager::class.java), FUNCTION_MTP)
-            }
-        }
-    }
 }

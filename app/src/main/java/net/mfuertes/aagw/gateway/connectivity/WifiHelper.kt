@@ -93,28 +93,6 @@ object WifiHelper {
         manager.removeGroup(channel, null)
     }
 
-
-    fun initNativeFlow(context: Context, mac: String, callback: (()->Unit)? = null) {
-        startP2pAp(context, mac) { wifiHotspotInfo ->
-            Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
-
-            val pairedDevices = BluetoothProfileHandler.getBondedDevices()
-
-            var connected = false
-            while (!connected)
-                for (device in pairedDevices) {
-                    BluetoothProfileHandler(context).connectDevice(
-                        device,
-                        DEFAULT_HANDSHAKE_TIMEOUT * 1000L,
-                        wifiHotspotInfo
-                    ) {
-                        connected = it;
-                    }
-                }
-            callback?.invoke()
-        }
-    }
-
     data class WifiHotspotInfo(
         val ssid: String,
         val psk: String,

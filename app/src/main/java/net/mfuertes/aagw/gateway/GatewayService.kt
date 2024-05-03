@@ -15,6 +15,7 @@ import android.util.Log
 import net.mfuertes.aagw.gateway.connectivity.UsbHelper
 import net.mfuertes.aagw.gateway.connectivity.WifiHelper
 import net.mfuertes.aagw.gateway.connectivity.BluetoothProfileHandler
+import net.mfuertes.aagw.gateway.connectivity.Coordinator
 import java.io.*
 import java.net.*
 
@@ -37,6 +38,7 @@ class GatewayService : Service() {
     private var mRunning = false
 
     private var mAccessory: UsbAccessory? = null
+    private var mSocket: Socket? = null
 
     private var mPhoneInputStream: FileInputStream? = null
     private var mPhoneOutputStream: FileOutputStream? = null
@@ -85,47 +87,45 @@ class GatewayService : Service() {
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
-    /**
-     * La idea aqui seria:
-     * Dos formas de iniciar:
-     * - Desde usb accesory:
-     *   - Nos guardamos el acesorio
-     *   - si tenemos tcp, adelante, sino esperamos
-     * - Desde manual/flow (desde tcp)
-     *   - guardamos el socket
-     *   - si tenemos accesorio, adelante, sino esperamos
-     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
         if (isRunning()) return START_REDELIVER_INTENT
 
-        updateNotification("Started")
+        when (intent?.action) {
+            Coordinator.ACTION_START_WITH_SOCKET -> {
+                // Save Socket and maybe start Threads
+                mAccessory = intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY) as UsbAccessory?
+                maybeStartThreads()
+            }
 
-        mAccessory = intent?.getParcelableExtra(UsbManager.EXTRA_ACCESSORY) as UsbAccessory?
-        if (mAccessory == null) {
-            Log.e(LOG_TAG, "No USB accessory found")
-            stopService()
-            return START_REDELIVER_INTENT
+            Coordinator.ACTION_START_WITH_USB -> {
+                // Save Socket and maybe start Threads
+                mSocket = Coordinator.SocketHandler.socket
+                maybeStartThreads()
+            }
+
+            Coordinator.ACTION_STOP_WITH_MESSAGE -> {
+                intent.getStringExtra(Coordinator.MESSAGE_KEY)?.let { Log.i(LOG_TAG, it) }
+                stopRunning()
+            }
+
         }
-
-        mMacAddress = intent?.getStringExtra(MAC_ADDRESS_KEY)
-        if (mMacAddress == null) {
-            Log.e(LOG_TAG, "No MAC Address found")
-            stopService()
-            return START_REDELIVER_INTENT
-        }
-
-        if(!ALREADY_STARTED)
-            WifiHelper.initNativeFlow(this, mMacAddress!!)
-        //Manually start AA.
-        mRunning = true
-        mUsbComplete = false
-        mLocalComplete = false
-
-        mMainHandlerThread.start()
 
         return START_REDELIVER_INTENT
+    }
+
+    private fun maybeStartThreads() {
+        if (mSocket != null && mAccessory != null) {
+            updateNotification("Started")
+
+            //Manually start AA.
+            mRunning = true
+            mUsbComplete = false
+            mLocalComplete = false
+
+            mMainHandlerThread.start()
+        }
     }
 
     private fun onMainHandlerThreadStopped() {
@@ -133,15 +133,11 @@ class GatewayService : Service() {
     }
 
     private fun stopService() {
-        WifiHelper.stopP2pAp(this)
-        //UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
         stopForeground(true)
         stopSelf()
     }
 
-    private fun stopRunning(msg: String) {
-        Log.i(LOG_TAG, msg)
-
+    private fun stopRunning() {
         if (mRunning) {
             mRunning = false
             updateNotification("Stopping wireless connection")
@@ -158,7 +154,7 @@ class GatewayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopRunning("Service onDestroy")
+        stopRunning()
     }
 
     private inner class MainHandlerThread : Thread() {
@@ -216,8 +212,8 @@ class GatewayService : Service() {
                     mPhoneOutputStream = FileOutputStream(fd)
                 }
 
-                if (mUsbFileDescriptor == null || mPhoneInputStream == null || mPhoneOutputStream == null) {
-                    stopRunning("Error initializing USB")
+                if (mUsbFileDescriptor == null || mPhoneInputStream == null) {
+                    stopRunning()
                 }
             }
 
@@ -251,7 +247,7 @@ class GatewayService : Service() {
                             throw e
                         }
                     } catch (e: Exception) {
-                        stopRunning("Error in USB main loop")
+                        stopRunning()
                     }
                 }
             }
@@ -264,22 +260,14 @@ class GatewayService : Service() {
                 }
             }
 
-            stopRunning("USB main loop stopped")
+            stopRunning()
         }
 
     }
 
     private inner class TCPPollThread() : Thread() {
 
-        var mServerSocket: ServerSocket? = null
-        var mSocket: Socket? = null
-
         fun cancel() {
-            mServerSocket?.runCatching {
-                close()
-            }
-            mServerSocket = null
-
             mSocket?.runCatching {
                 close()
             }
@@ -290,40 +278,17 @@ class GatewayService : Service() {
             super.run()
 
             try {
-
-                mServerSocket = ServerSocket(5288, 5).apply {
-                    soTimeout = mClientConnectionTimeout * 1000
-                    reuseAddress = true
-                }
-
-                mServerSocket?.let {
-                    mSocket = it.accept().apply {
-                        // soTimeout = 10000
-                    }
-                }
-
-                mServerSocket?.runCatching {
-                    close()
-                }
-                mServerSocket = null
-
-
                 mSocket?.also {
                     mSocketOutputStream = it.getOutputStream()
                     mSocketInputStream = DataInputStream(it.getInputStream())
                 }
 
                 Log.i(LOG_TAG, "TCP connected")
-            } catch (e: SocketTimeoutException) {
-                stopRunning("Wireless connection did not happen")
-            } catch (e: IOException) {
-                Log.e(LOG_TAG, "tcp - error initializing: ${e.message}")
-                stopRunning("Error initializing TCP")
+            } catch (e: Exception) {
+                stopRunning()
             }
 
-            if (isRunning() && mSocket == null) {
-                stopRunning("Error connecting to wireless client")
-            }
+            if (isRunning() && mSocket == null) stopRunning()
 
             if (isRunning()) {
                 mLocalComplete = true
@@ -379,7 +344,7 @@ class GatewayService : Service() {
                         throw e
                     }
                 } catch (e: Exception) {
-                    stopRunning("Error in TCP main loop")
+                    stopRunning()
                 }
             }
 
@@ -391,7 +356,7 @@ class GatewayService : Service() {
                 }
             }
 
-            stopRunning("TCP main loop stopped")
+            stopRunning()
         }
     }
 

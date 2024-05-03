@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceActivity
 import android.preference.PreferenceManager
+import net.mfuertes.aagw.gateway.connectivity.Coordinator
 import net.mfuertes.aagw.gateway.connectivity.WifiHelper
 
 
@@ -39,6 +40,17 @@ class USBReceiverActivity : PreferenceActivity() {
                             WifiHelper.stopP2pAp(this@USBReceiverActivity)
                         }
                         .show()
+                }
+                true
+            }
+        }
+
+        findPreference("start_flow")?.apply {
+            setOnPreferenceClickListener {
+                Coordinator.initNativeFlow(this@USBReceiverActivity) {
+                    Coordinator.listenForSocket(this@USBReceiverActivity) {
+                        Coordinator.startServiceWithSocket(this@USBReceiverActivity, it)
+                    }
                 }
                 true
             }
@@ -88,8 +100,6 @@ class USBReceiverActivity : PreferenceActivity() {
     override fun onResume() {
         super.onResume()
 
-        WifiHelper.stopP2pAp(this)
-
         // am start -n net.mfuertes.aagw.gateway/.USBReceiverActivity --es MAC_ADDRESS <MAC>
         intent.getStringExtra("MAC_ADDRESS")?.let {
             PreferenceManager.getDefaultSharedPreferences(this).edit().apply {
@@ -99,16 +109,9 @@ class USBReceiverActivity : PreferenceActivity() {
         }
 
         if (intent.action?.equals(UsbManager.ACTION_USB_ACCESSORY_ATTACHED) == true) {
-            val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
             val accessory = intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY) as UsbAccessory?
             accessory?.also { usbAccessory ->
-                val i = Intent(this, GatewayService::class.java)
-                i.putExtra(UsbManager.EXTRA_ACCESSORY, usbAccessory)
-                i.putExtra(
-                    GatewayService.MAC_ADDRESS_KEY,
-                    sharedPref.getString(GatewayService.MAC_ADDRESS_KEY, null)
-                )
-                startForegroundService(i)
+                Coordinator.startServiceWithUsb(this, usbAccessory)
             }
             finish()
         }

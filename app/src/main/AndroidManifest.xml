@@ -39,7 +39,7 @@
         android:requestLegacyExternalStorage="true">
 
         <receiver
-            android:name=".connectivity.UsbHelper$BootCompletedReceiver"
+            android:name=".connectivity.Coordinator$BootCompletedReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

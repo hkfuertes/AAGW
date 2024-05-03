@@ -7,9 +7,13 @@
             android:key="start_stop_ap"
             android:summary="Use another PC to get the BSSID"
             android:title="Start HotSpot" />
-    <net.mfuertes.aagw.gateway.EditSummaryPreference
-        android:key="MAC_ADDRESS_KEY"
-        android:title="P2P0 MAC Address (BSSID)" />
+        <net.mfuertes.aagw.gateway.EditSummaryPreference
+            android:key="MAC_ADDRESS_KEY"
+            android:title="P2P0 MAC Address (BSSID)" />
+        <Preference
+            android:key="start_flow"
+            android:summary="Manually starts the native flow"
+            android:title="Connect" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="permissions"
