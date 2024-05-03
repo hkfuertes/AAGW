@@ -86,37 +86,6 @@ object WifiHelper {
         manager.removeGroup(channel,null)
     }
 
-    private val registrationListener = object : NsdManager.RegistrationListener {
-        override fun onServiceRegistered(NsdServiceInfo: NsdServiceInfo) {}
-        override fun onRegistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {}
-        override fun onServiceUnregistered(arg0: NsdServiceInfo) {}
-        override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {}
-    }
-
-
-    fun registerService(context: Context, port: Int) {
-        val serviceInfo = NsdServiceInfo().apply {
-            serviceName = "aawireless"
-            serviceType = "_aawireless._tcp." //To make it work with Wifi Launcher!
-            setPort(port)
-        }
-
-        (context.getSystemService(Context.NSD_SERVICE) as NsdManager).apply {
-            registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener)
-        }
-    }
-
-    fun unRegisterService(context: Context) {
-        try {
-            (context.getSystemService(Context.NSD_SERVICE) as NsdManager).apply {
-                unregisterService(registrationListener)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-
     data class WifiHotspotInfo(
         val ssid: String,
         val psk: String,

@@ -48,9 +48,3 @@ Use the `aawg-twrp.zip` to install it as System App from TWRP.
 # Credit where credit is due..
 - Big thanks to **[nisargjhaveri](https://github.com/nisargjhaveri/AAWirelessGateway)** for almost all the code, this is a minor refactor of his work with a minimal P2P AP & USB gadget restart addition.
 - Thank you also to **[north3221](https://github.com/north3221/AAGateWayWiFi)** for the idea of restarting mtp (usb gadget). I have done it with the Android hidden API (so that root is not required, only system app) but the idea is the same.
-
----
-## TODO
-- Option to reset mtp on failure/boot.
-- Option to set timeout for tcp socket.
-- Make it work on Dacia Media Display!

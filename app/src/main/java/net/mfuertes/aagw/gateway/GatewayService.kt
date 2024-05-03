@@ -138,7 +138,7 @@ class GatewayService : Service() {
 
     private fun stopService() {
         WifiHelper.stopP2pAp(this)
-        //UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP)
+        UsbHelper.setMode(mUsbManager, UsbHelper.FUNCTION_MTP, true)
         stopForeground(true)
         stopSelf()
     }
