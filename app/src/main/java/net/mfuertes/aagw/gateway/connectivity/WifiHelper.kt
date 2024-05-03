@@ -14,9 +14,12 @@ import android.net.wifi.p2p.WifiP2pManager.ActionListener
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener
 import android.os.Looper.getMainLooper
 import android.util.Log
+import net.mfuertes.aagw.gateway.GatewayService
 
 object WifiHelper {
 
+    private const val DEFAULT_HANDSHAKE_TIMEOUT = 15
+    private const val DEFAULT_CONNECTION_TIMEOUT = 60 // 1min
     private val channelListener = ChannelListener { TODO("Not yet implemented") }
 
     @SuppressLint("MissingPermission")
@@ -26,24 +29,26 @@ object WifiHelper {
         callback: ((wifiHotspotInfo: WifiHotspotInfo) -> Unit)?
     ) {
         val manager = context.getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager
-        val channel: WifiP2pManager.Channel = manager.initialize(context, getMainLooper(), channelListener)
+        val channel: WifiP2pManager.Channel =
+            manager.initialize(context, getMainLooper(), channelListener)
 
-        val receiver = object: BroadcastReceiver() {
-            override fun onReceive(receiverContext :Context, intent: Intent) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(receiverContext: Context, intent: Intent) {
                 if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION == intent.action) {
-                    val networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO) as NetworkInfo?
+                    val networkInfo =
+                        intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO) as NetworkInfo?
                     if (networkInfo!!.isConnected) {
                         manager.requestGroupInfo(channel) { group ->
                             if (group != null && group.isGroupOwner) {
-                                manager.requestConnectionInfo(channel) {info ->
-                                    if(info?.groupOwnerAddress != null){
+                                manager.requestConnectionInfo(channel) { info ->
+                                    if (info?.groupOwnerAddress != null) {
                                         val wifiHotspotInfo = WifiHotspotInfo(
                                             group.networkName,
                                             group.passphrase,
                                             mac, //sudo iwlist scanning on linux!
                                             info.groupOwnerAddress.hostAddress!!
                                         )
-                                        Log.d("WIFI_P2P","Info: $wifiHotspotInfo")
+                                        Log.d("WIFI_P2P", "Info: $wifiHotspotInfo")
                                         callback?.invoke(wifiHotspotInfo)
                                     }
                                 }
@@ -63,8 +68,8 @@ object WifiHelper {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION)
         context.registerReceiver(receiver, intentFilter);
 
-        manager.removeGroup(channel,null)
-        manager.createGroup(channel, object :ActionListener {
+        manager.removeGroup(channel, null)
+        manager.createGroup(channel, object : ActionListener {
             override fun onSuccess() {
                 Log.d("WIFI_P2P", "Succeeded!")
             }
@@ -79,43 +84,36 @@ object WifiHelper {
     }
 
     fun stopP2pAp(
-        context: Context ) {
+        context: Context
+    ) {
         val manager = context.getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager
-        val channel: WifiP2pManager.Channel = manager.initialize(context, getMainLooper(), channelListener)
+        val channel: WifiP2pManager.Channel =
+            manager.initialize(context, getMainLooper(), channelListener)
 
-        manager.removeGroup(channel,null)
-    }
-
-    private val registrationListener = object : NsdManager.RegistrationListener {
-        override fun onServiceRegistered(NsdServiceInfo: NsdServiceInfo) {}
-        override fun onRegistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {}
-        override fun onServiceUnregistered(arg0: NsdServiceInfo) {}
-        override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {}
+        manager.removeGroup(channel, null)
     }
 
 
-    fun registerService(context: Context, port: Int) {
-        val serviceInfo = NsdServiceInfo().apply {
-            serviceName = "aawireless"
-            serviceType = "_aawireless._tcp." //To make it work with Wifi Launcher!
-            setPort(port)
-        }
+    fun initNativeFlow(context: Context, mac: String, callback: (()->Unit)? = null) {
+        startP2pAp(context, mac) { wifiHotspotInfo ->
+            Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
 
-        (context.getSystemService(Context.NSD_SERVICE) as NsdManager).apply {
-            registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener)
-        }
-    }
+            val pairedDevices = BluetoothProfileHandler.getBondedDevices()
 
-    fun unRegisterService(context: Context) {
-        try {
-            (context.getSystemService(Context.NSD_SERVICE) as NsdManager).apply {
-                unregisterService(registrationListener)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+            var connected = false
+            while (!connected)
+                for (device in pairedDevices) {
+                    BluetoothProfileHandler(context).connectDevice(
+                        device,
+                        DEFAULT_HANDSHAKE_TIMEOUT * 1000L,
+                        wifiHotspotInfo
+                    ) {
+                        connected = it;
+                    }
+                }
+            callback?.invoke()
         }
     }
-
 
     data class WifiHotspotInfo(
         val ssid: String,

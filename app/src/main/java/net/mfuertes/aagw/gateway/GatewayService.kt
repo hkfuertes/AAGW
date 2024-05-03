@@ -52,11 +52,7 @@ class GatewayService : Service() {
     private val mMainHandlerThread = MainHandlerThread()
 
     private val mUsbManager: UsbManager by lazy { getSystemService(UsbManager::class.java) }
-    private val mBluetoothProfileHandler: BluetoothProfileHandler by lazy {
-        BluetoothProfileHandler(
-            this
-        )
-    }
+    private val ALREADY_STARTED = true;
     private var mMacAddress: String? = null
 
     override fun onCreate() {
@@ -89,6 +85,16 @@ class GatewayService : Service() {
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
+    /**
+     * La idea aqui seria:
+     * Dos formas de iniciar:
+     * - Desde usb accesory:
+     *   - Nos guardamos el acesorio
+     *   - si tenemos tcp, adelante, sino esperamos
+     * - Desde manual/flow (desde tcp)
+     *   - guardamos el socket
+     *   - si tenemos accesorio, adelante, sino esperamos
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
@@ -110,24 +116,14 @@ class GatewayService : Service() {
             return START_REDELIVER_INTENT
         }
 
-        WifiHelper.startP2pAp(this, mMacAddress!!) { wifiHotspotInfo ->
-            Log.d("NATIVE_FLOW", wifiHotspotInfo.toString())
+        if(!ALREADY_STARTED)
+            WifiHelper.initNativeFlow(this, mMacAddress!!)
+        //Manually start AA.
+        mRunning = true
+        mUsbComplete = false
+        mLocalComplete = false
 
-            val pairedDevices = BluetoothProfileHandler.getBondedDevices()
-
-            for (device in pairedDevices) {
-                mBluetoothProfileHandler.connectDevice(device,
-                    DEFAULT_HANDSHAKE_TIMEOUT * 1000L,
-                    wifiHotspotInfo
-                )
-            }
-            //Manually start AA.
-            mRunning = true
-            mUsbComplete = false
-            mLocalComplete = false
-
-            mMainHandlerThread.start()
-        }
+        mMainHandlerThread.start()
 
         return START_REDELIVER_INTENT
     }
