@@ -1,4 +1,4 @@
-# Android Auto Wirelesss Gateway
+# Android Auto Wireless Gateway
 Complete solution for using an old phone as a Android Auto Wireless Dongle.
 
 ## Configuration
